@@ -96,11 +96,11 @@ func (p *Plugin) renderChildren(t string) {
 		return
 	}
 
-	p.seen[t] = true
-
 	msg := p.file.GetMessage(t)
 	if msg == nil {
 		return
+	} else {
+		p.seen[t] = true
 	}
 
 	for _, field := range msg.GetField() {
@@ -108,7 +108,9 @@ func (p *Plugin) renderChildren(t string) {
 			if !p.seen[t] {
 				p.renderChildren(t)
 				p.renderValidateJson(t)
-				p.seen[t] = true
+				if p.file.GetMessage(t) != nil {
+					p.seen[t] = true
+				}
 			}
 		}
 	}
@@ -131,7 +133,7 @@ func (p *Plugin) renderValidateJson(msgType string) {
 	req, ok := p.requests[msgType]
 	body := req.body
 	p.P(`// ValidateJSON validates JSON values for `, msg.GetName())
-	p.P(`func (m *`, msg.GetName(), `) ValidateJSON(v map[string]interface{}) error {`)
+	p.P(`func (m *`, msg.GetName(), `) ValidateJSON(v map[string]interface{}, path string) error {`)
 	p.P(`var err error`)
 	p.P()
 	if ok && body == "" {
@@ -144,28 +146,36 @@ func (p *Plugin) renderValidateJson(msgType string) {
 		p.P(`switch k {`)
 		for _, field := range msg.GetField() {
 			p.P(`case "`, field.GetName(), `":`)
-				if p.seen[p.extractType(field.GetTypeName())] {
+				if tn := p.extractType(field.GetTypeName()); tn != "" && p.seen[tn] {
 					if field.IsRepeated() && field.IsMessage() {
 						p.P(`if v[k] == nil {`)
 						p.P(`continue`)
 						p.P(`}`)
 						p.P(`vv := v[k]`)
-						p.P(`if validator, ok := interface{}(m.Get`, generator.CamelCase(field.GetName()), `()).(interface{ ValidateJSON(map[string]interface{}) (error) }); ok {`)
+						p.P(`var ePath string`)
+						p.P(`if path == "" {`)
+						p.P(`ePath = k`)
+						p.P(`} else {`)
+						p.P(`ePath = path + "." + k`)
+						p.P(`}`)
+						//p.P(`if validator, ok := interface{}(m.Get`, generator.CamelCase(field.GetName()), `()).(interface{ ValidateJSON(map[string]interface{}, string) (error) }); ok {`)
+						p.P(`if validator, ok := interface{}(&`, tn, `{}).(interface{ ValidateJSON(map[string]interface{}, string) (error) }); ok {`)
 						p.P(`if vArr, ok := vv.([]interface{}); ok {`)
 						p.P(`for i, vVal := range vArr {`)
 						p.P(`if vVal == nil {`)
 						p.P(`continue`)
 						p.P(`}`)
+						p.P(`aPath := fmt.Sprintf("%s.[%d]", ePath, i)`)
 						p.P(`if v, ok := vVal.(map[string]interface{}); ok {`)
-						p.P(`if err = validator.ValidateJSON(v); err != nil {`)
+						p.P(`if err = validator.ValidateJSON(v, aPath); err != nil {`)
 						p.P(`return err`)
 						p.P(`}`)
 						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for '`, field.GetName(), `'[%d]: expected object", i)`)
+						p.P(`return fmt.Errorf("Invalid value for %s: expected object", aPath)`)
 						p.P(`}`)
 						p.P(`}`)
 						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for '`, field.GetName(), `': expected array")`)
+						p.P(`return fmt.Errorf("Invalid value for %s: expected array", ePath)`)
 						p.P(`}`)
 						p.P(`}`)
 					} else if field.IsMessage() {
@@ -173,25 +183,32 @@ func (p *Plugin) renderValidateJson(msgType string) {
 						p.P(`continue`)
 						p.P(`}`)
 						p.P(`vv := v[k]`)
+						p.P(`var ePath string`)
+						p.P(`if path == "" {`)
+						p.P(`ePath = k`)
+						p.P(`} else {`)
+						p.P(`ePath = path + "." + k`)
+						p.P(`}`)
 						p.P(`if v, ok := vv.(map[string]interface{}); ok {`)
-						p.P(`if validator, ok := interface{}(m.Get`, generator.CamelCase(field.GetName()), `()).(interface{ ValidateJSON(map[string]interface{}) (error) }); ok {`)
-						p.P(`if err = validator.ValidateJSON(v); err != nil {`)
+						//p.P(`if validator, ok := interface{}(m.Get`, generator.CamelCase(field.GetName()), `()).(interface{ ValidateJSON(map[string]interface{}, string) (error) }); ok {`)
+						p.P(`if validator, ok := interface{}(&`, tn, `{}).(interface{ ValidateJSON(map[string]interface{}, string) (error) }); ok {`)
+						p.P(`if err = validator.ValidateJSON(v, ePath); err != nil {`)
 						p.P(`return err`)
 						p.P(`}`)
 						p.P(`}`)
 						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for '`, field.GetName(), `': expected object")`)
+						p.P(`return fmt.Errorf("Invalid value for %s: expected object", ePath)`)
 						p.P(`}`)
 					}
 				}
 		}
-		p.P(`default: return fmt.Errorf("Unknow field %s", k)`)
+		p.P(`default: return fmt.Errorf("Unknown field '%s.%s'", path, k)`)
 		p.P(`}`)
 		p.P(`}`)
 	} else if body != "" {
 		//p.P(`m.Get`, generator.CamelCase(body), `().ValidateJSON(v.(map[string]interface{}))`)
-		p.P(`if validator, ok := interface{}(m.Get`, generator.CamelCase(body), `()).(interface{ ValidateJSON(map[string]interface{}) (error) }); ok {`)
-		p.P(`if err = validator.ValidateJSON(v); err != nil {`)
+		p.P(`if validator, ok := interface{}(m.Get`, generator.CamelCase(body), `()).(interface{ ValidateJSON(map[string]interface{}, string) (error) }); ok {`)
+		p.P(`if err = validator.ValidateJSON(v, path); err != nil {`)
 		p.P(`return err`)
 		p.P(`}`)
 		p.P(`}`)
@@ -237,7 +254,7 @@ func (p *Plugin) renderAnnotator() {
 	for n, v := range p.requests {
 		p.P(`if r.Method == "`, v.method, `" {`)
 		p.P(`if _, matchErr := `, v.pattern, `.Match(components, verb); matchErr == nil {`)
-		p.P(`err = (&`, n, `{}).ValidateJSON(v)`)
+		p.P(`err = (&`, n, `{}).ValidateJSON(v, "")`)
 		p.P(`goto End`)
 		p.P(`}`)
 		p.P(`}`)
@@ -245,7 +262,7 @@ func (p *Plugin) renderAnnotator() {
 
 	p.P(`End:`)
 	p.P(`if err != nil {`)
-	p.P(`md["Validation-Error"] = append(md["Validation-Error"], err.Error())`)
+	p.P(`md.Set("Validation-Error", err.Error())`)
 	p.P(`}`)
 	p.P(`return md`)
 	p.P(`}`)
