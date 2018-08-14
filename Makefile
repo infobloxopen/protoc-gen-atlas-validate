@@ -9,8 +9,8 @@ IMAGE_VERSION  ?= dev-atlasvalidate
 
 # configuration for the protobuf gentool
 SRCROOT_ON_HOST      := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
-SRCROOT_IN_CONTAINER := /go/src/$(PROJECT_ROOT)
-DOCKERPATH           := /go/src/
+SRCROOT_IN_CONTAINER := /home/go/src/$(PROJECT_ROOT)
+DOCKERPATH           := /home/go/src
 DOCKER_RUNNER        := docker run --rm
 DOCKER_RUNNER        += -v $(SRCROOT_ON_HOST):$(SRCROOT_IN_CONTAINER)
 DOCKER_GENERATOR     := infoblox/atlas-gentool:$(IMAGE_VERSION)
@@ -35,11 +35,21 @@ install:
 .PHONY: gentool
 gentool:
 	@docker build -f $(GENVALIDATE_DOCKERFILE) -t $(GENVALIDATE_IMAGE):$(IMAGE_VERSION) .
-	@docker tag $(GENVALIDATE_IMAGE):$(IMAGE_VERSION) $(GENVALIDATE_IMAGE):latest
+	#@docker tag $(GENVALIDATE_IMAGE):$(IMAGE_VERSION) $(GENVALIDATE_IMAGE):latest
 	@docker image prune -f --filter label=stage=server-intermediate
 
+gentool-examples: gentool
+	        @$(GENERATOR) \
+		-I/go/src/github.com/askurydzin/protoc-gen-atlas-validate \
+                --go_out="plugins=grpc:$(DOCKERPATH)" \
+		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
+                --atlas-validate_out="$(DOCKERPATH)" \
+                        example/examplepb/example.proto
 
 gentool-options:
 	@$(GENERATOR) \
                 --gogo_out="Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:$(DOCKERPATH)" \
                 $(PROJECT_ROOT)/options/atlas_validate.proto
+
+test: gentool-examples
+	go test ./example/examplepb

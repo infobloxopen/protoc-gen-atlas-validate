@@ -226,7 +226,7 @@ func (p *Plugin) renderValidateJson(msgType string) {
 						p.P(`return err`)
 						p.P(`}`)
 						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for %s: expected object", aPath)`)
+						p.P(`return fmt.Errorf("Invalid value for %q: expected object", aPath)`)
 						p.P(`}`)
 						p.P(`}`)
 						p.P(`} else {`)
@@ -240,12 +240,12 @@ func (p *Plugin) renderValidateJson(msgType string) {
 						p.P(`return err`)
 						p.P(`}`)
 						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for %s: expected object", aPath)`)
+						p.P(`return fmt.Errorf("Invalid value for %q: expected object", aPath)`)
 						p.P(`}`)
 						p.P(`}`)
 						p.P(`}`)
 						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for %s: expected array", validate_runtime.JoinPath(path, k))`)
+						p.P(`return fmt.Errorf("Invalid value for %q: expected array", validate_runtime.JoinPath(path, k))`)
 						p.P(`}`)
 					} else if field.IsMessage() {
 						p.P(`if v[k] == nil {`)
@@ -263,7 +263,7 @@ func (p *Plugin) renderValidateJson(msgType string) {
 						p.P(`}`)
 						p.P(`}`)
 						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for %s: expected object", validate_runtime.JoinPath(path, k))`)
+						p.P(`return fmt.Errorf("Invalid value for %q: expected object", validate_runtime.JoinPath(path, k))`)
 						p.P(`}`)
 					}
 				}
@@ -272,7 +272,7 @@ func (p *Plugin) renderValidateJson(msgType string) {
 		if req.allowUnknown {
 			p.P(`continue`)
 		} else {
-			p.P(`return fmt.Errorf("Unknown field '%s'", validate_runtime.JoinPath(path, k))`)
+			p.P(`return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))`)
 		}
 		p.P(`}`)
 		p.P(`}`)
