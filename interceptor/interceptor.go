@@ -4,12 +4,14 @@ import (
         "context"
 	"fmt"
         "google.golang.org/grpc"
+        "google.golang.org/grpc/codes"
+        "google.golang.org/grpc/status"
         "google.golang.org/grpc/metadata"
 )
 
 
 const (
-	ValidationErrorMetaKey = "Validation-Error"
+	ValidationErrorMetaKey = "Atlas-Validation-Error"
 )
 
 // PresenceClientInterceptor gets the interceptor for populating a fieldmask in a
@@ -20,14 +22,31 @@ func ValidationClientInterceptor() grpc.UnaryClientInterceptor {
                         return
                 }
 
-		md, _ := metadata.FromIncomingContext(ctx)
+		imd, _ := metadata.FromIncomingContext(ctx)
+		omd, _ := metadata.FromOutgoingContext(ctx)
+
+		md := metadata.Join(imd, omd)
 
 		errors := md.Get(ValidationErrorMetaKey)
 		if len(errors) > 0 {
-			return fmt.Errorf(errors[0])
+			return status.Error(codes.InvalidArgument, errors[0])
 		}
 
                 return invoker(ctx, method, req, reply, cc, opts...)
         }
 }
+
+func UnaryServerInterceptor() grpc.UnaryServerInterceptor {
+        return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+		md, _ := metadata.FromIncomingContext(ctx)
+
+		errors := md.Get(ValidationErrorMetaKey)
+		if len(errors) > 0 {
+			return nil, fmt.Errorf(errors[0])
+		}
+
+		return handler(ctx, req)
+	}
+}
+
 
