@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package atlas_validate;
 
-option go_package = "github.com/askurydzin/protoc-gen-atlas-validate/options;options";
+option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/options;options";
 
 import "google/protobuf/descriptor.proto";
 

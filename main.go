@@ -2,7 +2,7 @@ package main
 
 import (
         "github.com/gogo/protobuf/vanity/command"
-        "github.com/askurydzin/protoc-gen-atlas-validate/plugin"
+        "github.com/infobloxopen/protoc-gen-atlas-validate/plugin"
 )
 
 func main() {

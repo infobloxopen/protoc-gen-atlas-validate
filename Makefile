@@ -1,7 +1,7 @@
 GOPATH ?= $(HOME)/go
 SRCPATH := $(patsubst %/,%,$(GOPATH))/src
 
-PROJECT_ROOT := github.com/askurydzin/protoc-gen-atlas-validate
+PROJECT_ROOT := github.com/infobloxopen/protoc-gen-atlas-validate
 
 DOCKERFILE_PATH := $(CURDIR)/docker
 IMAGE_REGISTRY ?= infoblox
@@ -40,7 +40,7 @@ gentool:
 
 gentool-examples: gentool
 	        @$(GENERATOR) \
-		-I/go/src/github.com/askurydzin/protoc-gen-atlas-validate \
+		-I/go/src/github.com/infobloxopen/protoc-gen-atlas-validate \
                 --go_out="plugins=grpc:$(DOCKERPATH)" \
 		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
                 --atlas-validate_out="$(DOCKERPATH)" \

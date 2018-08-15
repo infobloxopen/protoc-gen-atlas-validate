@@ -4,9 +4,9 @@ package example;
 
 import "google/api/annotations.proto";
 
-import "github.com/askurydzin/protoc-gen-atlas-validate/options/atlas_validate.proto";
+import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
 
-option go_package = "github.com/askurydzin/protoc-gen-atlas-validate/example/examplepb;examplepb";
+option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/examplepb;examplepb";
 
 message User {
 	int32 id = 1;

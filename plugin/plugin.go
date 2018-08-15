@@ -7,7 +7,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 
-	av_opts "github.com/askurydzin/protoc-gen-atlas-validate/options"
+	av_opts "github.com/infobloxopen/protoc-gen-atlas-validate/options"
 	http_annotations "github.com/gogo/googleapis/google/api"
 )
 
@@ -46,7 +46,7 @@ func (p *Plugin) GenerateImports(file *generator.FileDescriptor) {
 	p.PrintImport("context", "golang.org/x/net/context")
 	p.PrintImport("metadata", "google.golang.org/grpc/metadata")
 	p.PrintImport("runtime", "github.com/grpc-ecosystem/grpc-gateway/runtime")
-	p.PrintImport("validate_runtime", "github.com/askurydzin/protoc-gen-atlas-validate/runtime")
+	p.PrintImport("validate_runtime", "github.com/infobloxopen/protoc-gen-atlas-validate/runtime")
 
 	for i, v := range p.importedList {
 		p.PrintImport(generator.GoPackageName(fmt.Sprintf("google_protobuf%d", i+1)), generator.GoImportPath(v))
