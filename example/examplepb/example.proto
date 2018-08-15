@@ -14,6 +14,12 @@ message User {
 	Profile profile = 3;
 	Address address = 4;
 	repeated Group groups = 5;
+
+	message Parent {
+		string name = 1;
+	};
+
+	repeated Parent parents = 6;
 }
 
 message Address {

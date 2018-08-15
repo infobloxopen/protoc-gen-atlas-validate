@@ -22,7 +22,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// ValidateJSON validates JSON values for Profile
+// DefaultValidateJSON Profile validates JSON values for Profile
 func DefaultProfileValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	for k, _ := range v {
@@ -37,7 +37,7 @@ func DefaultProfileValidateJSON(v map[string]interface{}, path string) (err erro
 	return err
 }
 
-// ValidateJSON validates JSON values for Address
+// DefaultValidateJSON Address validates JSON values for Address
 func DefaultAddressValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	for k, _ := range v {
@@ -53,7 +53,7 @@ func DefaultAddressValidateJSON(v map[string]interface{}, path string) (err erro
 	return err
 }
 
-// ValidateJSON validates JSON values for Group
+// DefaultValidateJSON Group validates JSON values for Group
 func DefaultGroupValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	for k, _ := range v {
@@ -68,7 +68,20 @@ func DefaultGroupValidateJSON(v map[string]interface{}, path string) (err error)
 	return err
 }
 
-// ValidateJSON validates JSON values for User
+// DefaultValidateJSON UserParent validates JSON values for UserParent
+func DefaultUserParentValidateJSON(v map[string]interface{}, path string) (err error) {
+
+	for k, _ := range v {
+		switch k {
+		case "name":
+		default:
+			return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+		}
+	}
+	return err
+}
+
+// DefaultValidateJSON User validates JSON values for User
 func DefaultUserValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	for k, _ := range v {
@@ -155,6 +168,46 @@ func DefaultUserValidateJSON(v map[string]interface{}, path string) (err error) 
 			} else {
 				return fmt.Errorf("Invalid value for %q: expected array", validate_runtime.JoinPath(path, k))
 			}
+		case "parents":
+			if v[k] == nil {
+				continue
+			}
+			vv := v[k]
+			if vArr, ok := vv.([]interface{}); ok {
+				if validator, ok := interface{}(&User_Parent{}).(interface {
+					ValidateJSON(map[string]interface{}, string) error
+				}); ok {
+					for i, vVal := range vArr {
+						if vVal == nil {
+							continue
+						}
+						aPath := fmt.Sprintf("%s.[%d]", validate_runtime.JoinPath(path, k), i)
+						if v, ok := vVal.(map[string]interface{}); ok {
+							if err = validator.ValidateJSON(v, aPath); err != nil {
+								return err
+							}
+						} else {
+							return fmt.Errorf("Invalid value for %q: expected object", aPath)
+						}
+					}
+				} else {
+					for i, vVal := range vArr {
+						if vVal == nil {
+							continue
+						}
+						aPath := fmt.Sprintf("%s.[%d]", validate_runtime.JoinPath(path, k), i)
+						if v, ok := vVal.(map[string]interface{}); ok {
+							if err = DefaultUserParentValidateJSON(v, aPath); err != nil {
+								return err
+							}
+						} else {
+							return fmt.Errorf("Invalid value for %q: expected object", aPath)
+						}
+					}
+				}
+			} else {
+				return fmt.Errorf("Invalid value for %q: expected array", validate_runtime.JoinPath(path, k))
+			}
 		default:
 			return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
 		}
@@ -162,41 +215,43 @@ func DefaultUserValidateJSON(v map[string]interface{}, path string) (err error) 
 	return err
 }
 
-// ValidateJSON validates JSON values for CreateUserRequest
+// DefaultValidateJSON CreateUserRequest validates JSON values for CreateUserRequest
 func DefaultCreateUserRequestValidateJSON(v map[string]interface{}, path string) (err error) {
 
-	if validator, ok := interface{}(&(User{})).(interface {
+	var k = ""
+	if validator, ok := interface{}(&User{}).(interface {
 		ValidateJSON(map[string]interface{}, string) error
 	}); ok {
-		if err = validator.ValidateJSON(v, path); err != nil {
+		if err = validator.ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
 			return err
 		}
 	} else {
-		if err = DefaultUserValidateJSON(v, path); err != nil {
+		if err = DefaultUserValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
 			return err
 		}
 	}
 	return err
 }
 
-// ValidateJSON validates JSON values for UpdateUserRequest
+// DefaultValidateJSON UpdateUserRequest validates JSON values for UpdateUserRequest
 func DefaultUpdateUserRequestValidateJSON(v map[string]interface{}, path string) (err error) {
 
-	if validator, ok := interface{}(&(User{})).(interface {
+	var k = ""
+	if validator, ok := interface{}(&User{}).(interface {
 		ValidateJSON(map[string]interface{}, string) error
 	}); ok {
-		if err = validator.ValidateJSON(v, path); err != nil {
+		if err = validator.ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
 			return err
 		}
 	} else {
-		if err = DefaultUserValidateJSON(v, path); err != nil {
+		if err = DefaultUserValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
 			return err
 		}
 	}
 	return err
 }
 
-// ValidateJSON validates JSON values for EmptyRequest
+// DefaultValidateJSON EmptyRequest validates JSON values for EmptyRequest
 func DefaultEmptyRequestValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	if v != nil {
@@ -206,17 +261,18 @@ func DefaultEmptyRequestValidateJSON(v map[string]interface{}, path string) (err
 	return err
 }
 
-// ValidateJSON validates JSON values for UpdateProfileRequest
+// DefaultValidateJSON UpdateProfileRequest validates JSON values for UpdateProfileRequest
 func DefaultUpdateProfileRequestValidateJSON(v map[string]interface{}, path string) (err error) {
 
-	if validator, ok := interface{}(&(Profile{})).(interface {
+	var k = ""
+	if validator, ok := interface{}(&Profile{}).(interface {
 		ValidateJSON(map[string]interface{}, string) error
 	}); ok {
-		if err = validator.ValidateJSON(v, path); err != nil {
+		if err = validator.ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
 			return err
 		}
 	} else {
-		if err = DefaultProfileValidateJSON(v, path); err != nil {
+		if err = DefaultProfileValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
 			return err
 		}
 	}
@@ -233,51 +289,64 @@ var patterns = []struct {
 		pattern:   pattern_Users_Create_0,
 		validator: DefaultCreateUserRequestValidateJSON,
 	},
+
 	{
 		method:    "PUT",
 		pattern:   pattern_Users_Update_0,
 		validator: DefaultUpdateUserRequestValidateJSON,
 	},
+
 	{
 		method:    "PATCH",
 		pattern:   pattern_Users_Update_1,
 		validator: DefaultUpdateUserRequestValidateJSON,
 	},
+
 	{
 		method:    "GET",
 		pattern:   pattern_Users_List_0,
 		validator: DefaultEmptyRequestValidateJSON,
 	},
+
 	{
 		method:    "GET",
 		pattern:   pattern_Users_List_1,
 		validator: DefaultEmptyRequestValidateJSON,
 	},
+
 	{
 		method:    "POST",
 		pattern:   pattern_Profiles_Create_0,
 		validator: DefaultProfileValidateJSON,
 	},
+
+	// excluded by allowUnknown option.
 	// {
 	// method: "PUT",
 	// pattern: pattern_Profiles_Update_0,
 	// validator: DefaultUpdateProfileRequestValidateJSON,
 	// },
+
+	// excluded by allowUnknown option.
 	// {
 	// method: "POST",
 	// pattern: pattern_Groups_Create_0,
 	// validator: DefaultGroupValidateJSON,
 	// },
+
+	// excluded by allowUnknown option.
 	// {
 	// method: "PUT",
 	// pattern: pattern_Groups_Update_0,
 	// validator: DefaultGroupValidateJSON,
 	// },
+
 	{
 		method:    "GET",
 		pattern:   pattern_Groups_ValidatedList_0,
 		validator: DefaultEmptyRequestValidateJSON,
 	},
+
 	{
 		method:    "GET",
 		pattern:   pattern_Groups_ValidatedList_1,
