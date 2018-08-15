@@ -24,8 +24,9 @@ message Address {
 }
 
 message Group {
-	string name = 1;
-	string notes = 2;
+	int32 id = 1;
+	string name = 2;
+	string notes = 3;
 }
 
 message CreateUserRequest {
@@ -36,19 +37,19 @@ message UpdateUserRequest {
 	User payload = 1;
 }
 
-message CreateUserResponse {}
+message EmptyRequest {}
 
-message UpdateUserResponse {}
+message EmptyResponse {}
 
 service Users {
-	rpc Create(CreateUserRequest) returns (CreateUserResponse) {
+	rpc Create(CreateUserRequest) returns (EmptyResponse) {
 		option (google.api.http) = {
 			post: "/users";
 			body: "payload";
 		};
 	}
 
-	rpc Update(UpdateUserRequest) returns (UpdateUserResponse) {
+	rpc Update(UpdateUserRequest) returns (EmptyResponse) {
 		option (google.api.http) = {
 			put: "/users/{payload.id}";
 			body: "payload";
@@ -58,11 +59,16 @@ service Users {
 			};
 		};
 	}
+
+	rpc List(EmptyRequest) returns (EmptyResponse) {
+		option (google.api.http) = {
+			get: "/users";
+			additional_bindings: {
+				get: "/antother_users";
+			};
+		};
+	}
 }
-
-message CreateProfileResponse {}
-
-message UpdateProfileResponse {}
 
 message Profile {
 	int32 id = 1;
@@ -75,15 +81,15 @@ message UpdateProfileRequest {
 }
 
 service Profiles {
-	rpc Create(Profile) returns (CreateProfileResponse) {
+	rpc Create(Profile) returns (EmptyResponse) {
 		option (google.api.http) = {
 			post: "/profiles";
 			body: "*";
 		};
 	}
 
-	rpc Update(UpdateProfileRequest) returns (UpdateProfileResponse) {
-		option (atlas_validate.method_opts).allow_unknown_fields = true;
+	rpc Update(UpdateProfileRequest) returns (EmptyResponse) {
+		option (atlas_validate.method).allow_unknown_fields = true;
 		option (google.api.http) = {
 			put: "/profiles/{payload.id}";
 			body: "payload";
@@ -91,4 +97,31 @@ service Profiles {
 	}
 }
 
-option (atlas_validate.file_opts).allow_unknown_fields = false;
+service Groups {
+	option (atlas_validate.service).allow_unknown_fields = true;
+	rpc Create(Group) returns (EmptyResponse) {
+		option (google.api.http) = {
+			post: "/groups";
+			body: "*";
+		};
+	}
+
+	rpc Update(Group) returns (EmptyResponse) {
+		option (google.api.http) = {
+			put: "/groups/{id}";
+			body: "*";
+		};
+	}
+
+	rpc ValidatedList(EmptyRequest) returns (EmptyResponse) {
+		option (atlas_validate.method).allow_unknown_fields = false;
+		option (google.api.http) = {
+			get: "/groups";
+			additional_bindings: {
+				get: "/groups_add";
+			};
+		};
+	}
+}
+
+option (atlas_validate.file).allow_unknown_fields = false;

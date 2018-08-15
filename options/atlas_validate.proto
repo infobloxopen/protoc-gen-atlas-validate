@@ -7,7 +7,7 @@ option go_package = "github.com/askurydzin/protoc-gen-atlas-validate/options;opt
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.FileOptions {
-  optional AtlasValidateFileOption file_opts = 52219;
+  optional AtlasValidateFileOption file = 52219;
 }
 
 message AtlasValidateFileOption {
@@ -15,9 +15,17 @@ message AtlasValidateFileOption {
 }
 
 extend google.protobuf.MethodOptions {
-  optional AtlasValidateMethodOption method_opts = 52219;
+  optional AtlasValidateMethodOption method = 52219;
 }
 
 message AtlasValidateMethodOption {
+  optional bool allow_unknown_fields = 1;
+}
+
+extend google.protobuf.ServiceOptions {
+  optional AtlasValidateServiceOption service = 52219;
+}
+
+message AtlasValidateServiceOption {
   optional bool allow_unknown_fields = 1;
 }

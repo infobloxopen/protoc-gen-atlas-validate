@@ -23,8 +23,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // ValidateJSON validates JSON values for Profile
-func DefaultProfileValidateJSON(v map[string]interface{}, path string) error {
-	var err error
+func DefaultProfileValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	for k, _ := range v {
 		switch k {
@@ -39,8 +38,7 @@ func DefaultProfileValidateJSON(v map[string]interface{}, path string) error {
 }
 
 // ValidateJSON validates JSON values for Address
-func DefaultAddressValidateJSON(v map[string]interface{}, path string) error {
-	var err error
+func DefaultAddressValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	for k, _ := range v {
 		switch k {
@@ -56,23 +54,22 @@ func DefaultAddressValidateJSON(v map[string]interface{}, path string) error {
 }
 
 // ValidateJSON validates JSON values for Group
-func DefaultGroupValidateJSON(v map[string]interface{}, path string) error {
-	var err error
+func DefaultGroupValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	for k, _ := range v {
 		switch k {
+		case "id":
 		case "name":
 		case "notes":
 		default:
-			return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			continue
 		}
 	}
 	return err
 }
 
 // ValidateJSON validates JSON values for User
-func DefaultUserValidateJSON(v map[string]interface{}, path string) error {
-	var err error
+func DefaultUserValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	for k, _ := range v {
 		switch k {
@@ -166,8 +163,7 @@ func DefaultUserValidateJSON(v map[string]interface{}, path string) error {
 }
 
 // ValidateJSON validates JSON values for CreateUserRequest
-func DefaultCreateUserRequestValidateJSON(v map[string]interface{}, path string) error {
-	var err error
+func DefaultCreateUserRequestValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	if validator, ok := interface{}(&(User{})).(interface {
 		ValidateJSON(map[string]interface{}, string) error
@@ -184,8 +180,7 @@ func DefaultCreateUserRequestValidateJSON(v map[string]interface{}, path string)
 }
 
 // ValidateJSON validates JSON values for UpdateUserRequest
-func DefaultUpdateUserRequestValidateJSON(v map[string]interface{}, path string) error {
-	var err error
+func DefaultUpdateUserRequestValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	if validator, ok := interface{}(&(User{})).(interface {
 		ValidateJSON(map[string]interface{}, string) error
@@ -201,9 +196,18 @@ func DefaultUpdateUserRequestValidateJSON(v map[string]interface{}, path string)
 	return err
 }
 
+// ValidateJSON validates JSON values for EmptyRequest
+func DefaultEmptyRequestValidateJSON(v map[string]interface{}, path string) (err error) {
+
+	if v != nil {
+		err = fmt.Errorf("Body is not allowed")
+		return err
+	}
+	return err
+}
+
 // ValidateJSON validates JSON values for UpdateProfileRequest
-func DefaultUpdateProfileRequestValidateJSON(v map[string]interface{}, path string) error {
-	var err error
+func DefaultUpdateProfileRequestValidateJSON(v map[string]interface{}, path string) (err error) {
 
 	if validator, ok := interface{}(&(Profile{})).(interface {
 		ValidateJSON(map[string]interface{}, string) error
@@ -236,8 +240,18 @@ var patterns = []struct {
 	},
 	{
 		method:    "PATCH",
-		pattern:   pattern_Users_Update_0,
+		pattern:   pattern_Users_Update_1,
 		validator: DefaultUpdateUserRequestValidateJSON,
+	},
+	{
+		method:    "GET",
+		pattern:   pattern_Users_List_0,
+		validator: DefaultEmptyRequestValidateJSON,
+	},
+	{
+		method:    "GET",
+		pattern:   pattern_Users_List_1,
+		validator: DefaultEmptyRequestValidateJSON,
 	},
 	{
 		method:    "POST",
@@ -249,6 +263,26 @@ var patterns = []struct {
 	// pattern: pattern_Profiles_Update_0,
 	// validator: DefaultUpdateProfileRequestValidateJSON,
 	// },
+	// {
+	// method: "POST",
+	// pattern: pattern_Groups_Create_0,
+	// validator: DefaultGroupValidateJSON,
+	// },
+	// {
+	// method: "PUT",
+	// pattern: pattern_Groups_Update_0,
+	// validator: DefaultGroupValidateJSON,
+	// },
+	{
+		method:    "GET",
+		pattern:   pattern_Groups_ValidatedList_0,
+		validator: DefaultEmptyRequestValidateJSON,
+	},
+	{
+		method:    "GET",
+		pattern:   pattern_Groups_ValidatedList_1,
+		validator: DefaultEmptyRequestValidateJSON,
+	},
 }
 
 // ValidationAnnotator function validates JSON.

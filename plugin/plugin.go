@@ -2,13 +2,13 @@ package plugin
 
 import (
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"strings"
-        "github.com/gogo/protobuf/proto"
 	// goproto "github.com/golang/protobuf/proto"
-        _ "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
-        "github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	http_annotations "github.com/gogo/googleapis/google/api"
 	av_opts "github.com/askurydzin/protoc-gen-atlas-validate/options"
+	http_annotations "github.com/gogo/googleapis/google/api"
+	_ "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 )
 
 const (
@@ -17,20 +17,19 @@ const (
 )
 
 type requestDescriptor struct {
-	body string
-	name string
-	pattern string
-	method string
+	body         string
+	name         string
+	pattern      string
+	method       string
 	allowUnknown bool
 }
 
-
 type Plugin struct {
 	*generator.Generator
-	requests []requestDescriptor
-	seen map[string]bool
+	requests       []requestDescriptor
+	seen           map[string]bool
 	seenValidators map[string]bool
-	file *generator.FileDescriptor
+	file           *generator.FileDescriptor
 }
 
 func (p *Plugin) Name() string {
@@ -61,14 +60,21 @@ func (p *Plugin) Generate(file *generator.FileDescriptor) {
 	p.file = file
 
 	var gavOpt *av_opts.AtlasValidateFileOption
-	if proto.HasExtension(file.GetOptions(), av_opts.E_FileOpts) {
-		if aExt, err := proto.GetExtension(file.Options, av_opts.E_FileOpts); err == nil && aExt != nil {
+	if proto.HasExtension(file.GetOptions(), av_opts.E_File) {
+		if aExt, err := proto.GetExtension(file.Options, av_opts.E_File); err == nil && aExt != nil {
 			gavOpt = aExt.(*av_opts.AtlasValidateFileOption)
 		}
 	}
 
-
 	for _, svc := range file.GetService() {
+
+		var savOpt *av_opts.AtlasValidateServiceOption
+		if proto.HasExtension(svc.GetOptions(), av_opts.E_Service) {
+			if aExt, err := proto.GetExtension(svc.Options, av_opts.E_Service); err == nil && aExt != nil {
+				savOpt = aExt.(*av_opts.AtlasValidateServiceOption)
+			}
+		}
+
 		for _, method := range svc.GetMethod() {
 			if method.GetOptions() == nil {
 				continue
@@ -83,38 +89,42 @@ func (p *Plugin) Generate(file *generator.FileDescriptor) {
 				continue
 			}
 
-			var avOpt *av_opts.AtlasValidateMethodOption
-			if aExt, err := proto.GetExtension(method.Options, av_opts.E_MethodOpts); err == nil && aExt != nil {
-				avOpt = aExt.(*av_opts.AtlasValidateMethodOption)
+			var mavOpt *av_opts.AtlasValidateMethodOption
+			if aExt, err := proto.GetExtension(method.Options, av_opts.E_Method); err == nil && aExt != nil {
+				mavOpt = aExt.(*av_opts.AtlasValidateMethodOption)
 			}
 
 			if t := p.extractType(method.GetInputType()); t != "" {
 				if httpRule, ok := ext.(*http_annotations.HttpRule); ok {
 					rd := requestDescriptor{
-						name: t,
-						body: httpRule.Body,
-						method: p.getHttpMethod(httpRule),
+						name:    t,
+						body:    httpRule.Body,
+						method:  p.getHttpMethod(httpRule),
 						pattern: fmt.Sprintf("pattern_%s_%s_0", svc.GetName(), method.GetName()),
 					}
 
-					if avOpt != nil {
-						rd.allowUnknown = avOpt.GetAllowUnknownFields()
+					if mavOpt != nil {
+						rd.allowUnknown = mavOpt.GetAllowUnknownFields()
+					} else if savOpt != nil {
+						rd.allowUnknown = savOpt.GetAllowUnknownFields()
 					} else {
 						rd.allowUnknown = gavOpt.GetAllowUnknownFields()
 					}
 
 					p.requests = append(p.requests, rd)
 
-					for _, httpRule := range httpRule.GetAdditionalBindings() {
+					for i, httpRule := range httpRule.GetAdditionalBindings() {
 						rd := requestDescriptor{
-							name: t,
-							body: httpRule.Body,
-							method: p.getHttpMethod(httpRule),
-							pattern: fmt.Sprintf("pattern_%s_%s_0", svc.GetName(), method.GetName()),
+							name:    t,
+							body:    httpRule.Body,
+							method:  p.getHttpMethod(httpRule),
+							pattern: fmt.Sprintf("pattern_%s_%s_%d", svc.GetName(), method.GetName(), i+1),
 						}
 
-						if avOpt != nil {
-							rd.allowUnknown = avOpt.GetAllowUnknownFields()
+						if mavOpt != nil {
+							rd.allowUnknown = mavOpt.GetAllowUnknownFields()
+						} else if savOpt != nil {
+							rd.allowUnknown = savOpt.GetAllowUnknownFields()
 						} else {
 							rd.allowUnknown = gavOpt.GetAllowUnknownFields()
 						}
@@ -136,7 +146,6 @@ func (p *Plugin) Generate(file *generator.FileDescriptor) {
 
 	p.renderAnnotator()
 }
-
 
 func (p *Plugin) renderChildren(t string) {
 	if p.seen[t] {
@@ -195,11 +204,10 @@ func (p *Plugin) renderValidateJson(msgType string) {
 	req, ok := p.findReq(msgType)
 	body := req.body
 	p.P(`// ValidateJSON validates JSON values for `, msg.GetName())
-	p.P(`func Default`, msg.GetName(), `ValidateJSON(v map[string]interface{}, path string) error {`)
-	p.P(`var err error`)
+	p.P(`func Default`, msg.GetName(), `ValidateJSON(v map[string]interface{}, path string) (err error) {`)
 	p.P()
 	if ok && body == "" {
-		p.P(`for range v {`)
+		p.P(`if v != nil {`)
 		p.P(`err = fmt.Errorf("Body is not allowed")`)
 		p.P(`return err`)
 		p.P(`}`)
@@ -208,65 +216,65 @@ func (p *Plugin) renderValidateJson(msgType string) {
 		p.P(`switch k {`)
 		for _, field := range msg.GetField() {
 			p.P(`case "`, field.GetName(), `":`)
-				if tn := p.extractType(field.GetTypeName()); tn != "" && p.seen[tn] {
-					if field.IsRepeated() && field.IsMessage() {
-						p.P(`if v[k] == nil {`)
-						p.P(`continue`)
-						p.P(`}`)
-						p.P(`vv := v[k]`)
-						p.P(`if vArr, ok := vv.([]interface{}); ok {`)
-						p.P(`if validator, ok := interface{}(&`, tn, `{}).(interface{ ValidateJSON(map[string]interface{}, string) (error) }); ok {`)
-						p.P(`for i, vVal := range vArr {`)
-						p.P(`if vVal == nil {`)
-						p.P(`continue`)
-						p.P(`}`)
-						p.P(`aPath := fmt.Sprintf("%s.[%d]", validate_runtime.JoinPath(path, k), i)`)
-						p.P(`if v, ok := vVal.(map[string]interface{}); ok {`)
-						p.P(`if err = validator.ValidateJSON(v, aPath); err != nil {`)
-						p.P(`return err`)
-						p.P(`}`)
-						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for %q: expected object", aPath)`)
-						p.P(`}`)
-						p.P(`}`)
-						p.P(`} else {`)
-						p.P(`for i, vVal := range vArr {`)
-						p.P(`if vVal == nil {`)
-						p.P(`continue`)
-						p.P(`}`)
-						p.P(`aPath := fmt.Sprintf("%s.[%d]", validate_runtime.JoinPath(path, k), i)`)
-						p.P(`if v, ok := vVal.(map[string]interface{}); ok {`)
-						p.P(`if err = Default`, tn, `ValidateJSON(v, aPath); err != nil {`)
-						p.P(`return err`)
-						p.P(`}`)
-						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for %q: expected object", aPath)`)
-						p.P(`}`)
-						p.P(`}`)
-						p.P(`}`)
-						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for %q: expected array", validate_runtime.JoinPath(path, k))`)
-						p.P(`}`)
-					} else if field.IsMessage() {
-						p.P(`if v[k] == nil {`)
-						p.P(`continue`)
-						p.P(`}`)
-						p.P(`vv := v[k]`)
-						p.P(`if v, ok := vv.(map[string]interface{}); ok {`)
-						p.P(`if validator, ok := interface{}(&`, tn, `{}).(interface{ ValidateJSON(map[string]interface{}, string) (error) }); ok {`)
-						p.P(`if err = validator.ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {`)
-						p.P(`return err`)
-						p.P(`}`)
-						p.P(`} else {`)
-						p.P(`if err = Default`, tn, `ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {`)
-						p.P(`return err`)
-						p.P(`}`)
-						p.P(`}`)
-						p.P(`} else {`)
-						p.P(`return fmt.Errorf("Invalid value for %q: expected object", validate_runtime.JoinPath(path, k))`)
-						p.P(`}`)
-					}
+			if tn := p.extractType(field.GetTypeName()); tn != "" && p.seen[tn] {
+				if field.IsRepeated() && field.IsMessage() {
+					p.P(`if v[k] == nil {`)
+					p.P(`continue`)
+					p.P(`}`)
+					p.P(`vv := v[k]`)
+					p.P(`if vArr, ok := vv.([]interface{}); ok {`)
+					p.P(`if validator, ok := interface{}(&`, tn, `{}).(interface{ ValidateJSON(map[string]interface{}, string) (error) }); ok {`)
+					p.P(`for i, vVal := range vArr {`)
+					p.P(`if vVal == nil {`)
+					p.P(`continue`)
+					p.P(`}`)
+					p.P(`aPath := fmt.Sprintf("%s.[%d]", validate_runtime.JoinPath(path, k), i)`)
+					p.P(`if v, ok := vVal.(map[string]interface{}); ok {`)
+					p.P(`if err = validator.ValidateJSON(v, aPath); err != nil {`)
+					p.P(`return err`)
+					p.P(`}`)
+					p.P(`} else {`)
+					p.P(`return fmt.Errorf("Invalid value for %q: expected object", aPath)`)
+					p.P(`}`)
+					p.P(`}`)
+					p.P(`} else {`)
+					p.P(`for i, vVal := range vArr {`)
+					p.P(`if vVal == nil {`)
+					p.P(`continue`)
+					p.P(`}`)
+					p.P(`aPath := fmt.Sprintf("%s.[%d]", validate_runtime.JoinPath(path, k), i)`)
+					p.P(`if v, ok := vVal.(map[string]interface{}); ok {`)
+					p.P(`if err = Default`, tn, `ValidateJSON(v, aPath); err != nil {`)
+					p.P(`return err`)
+					p.P(`}`)
+					p.P(`} else {`)
+					p.P(`return fmt.Errorf("Invalid value for %q: expected object", aPath)`)
+					p.P(`}`)
+					p.P(`}`)
+					p.P(`}`)
+					p.P(`} else {`)
+					p.P(`return fmt.Errorf("Invalid value for %q: expected array", validate_runtime.JoinPath(path, k))`)
+					p.P(`}`)
+				} else if field.IsMessage() {
+					p.P(`if v[k] == nil {`)
+					p.P(`continue`)
+					p.P(`}`)
+					p.P(`vv := v[k]`)
+					p.P(`if v, ok := vv.(map[string]interface{}); ok {`)
+					p.P(`if validator, ok := interface{}(&`, tn, `{}).(interface{ ValidateJSON(map[string]interface{}, string) (error) }); ok {`)
+					p.P(`if err = validator.ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {`)
+					p.P(`return err`)
+					p.P(`}`)
+					p.P(`} else {`)
+					p.P(`if err = Default`, tn, `ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {`)
+					p.P(`return err`)
+					p.P(`}`)
+					p.P(`}`)
+					p.P(`} else {`)
+					p.P(`return fmt.Errorf("Invalid value for %q: expected object", validate_runtime.JoinPath(path, k))`)
+					p.P(`}`)
 				}
+			}
 		}
 		p.P(`default:`)
 		if req.allowUnknown {
@@ -357,11 +365,16 @@ func (p *Plugin) renderAnnotator() {
 
 func (p *Plugin) getHttpMethod(r *http_annotations.HttpRule) string {
 	switch r.GetPattern().(type) {
-	case *http_annotations.HttpRule_Get: return "GET"
-	case *http_annotations.HttpRule_Post: return "POST"
-	case *http_annotations.HttpRule_Put: return "PUT"
-	case *http_annotations.HttpRule_Delete: return "DELETE"
-	case *http_annotations.HttpRule_Patch: return "PATCH"
+	case *http_annotations.HttpRule_Get:
+		return "GET"
+	case *http_annotations.HttpRule_Post:
+		return "POST"
+	case *http_annotations.HttpRule_Put:
+		return "PUT"
+	case *http_annotations.HttpRule_Delete:
+		return "DELETE"
+	case *http_annotations.HttpRule_Patch:
+		return "PATCH"
 	}
 
 	return ""
