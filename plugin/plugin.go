@@ -62,7 +62,6 @@ func (p *Plugin) Generate(file *generator.FileDescriptor) {
 	p.renderAnnotator()
 }
 
-
 // getAllowUnknown function picks up correct allowUnknown option from file/service/method
 // hierarchy.
 func (p *Plugin) getAllowUnknown(file proto.Message, svc proto.Message, method proto.Message) bool {
@@ -131,7 +130,6 @@ func (p *Plugin) trimPkgPrefix(t string) string {
 	return strings.TrimPrefix(t, p.pkgPrefix())
 }
 
-
 // renderMethodDescriptors renders array of structs that are used to trigger validation
 // function on correct HTTP request according to HTTP method and grpc-gateway/runtime.Pattern.
 func (p *Plugin) renderMethodDescriptors() {
@@ -164,7 +162,7 @@ func (p *Plugin) renderValidatorMethods() {
 		p.P(`func validate_`, m.gwPattern, `(r json.RawMessage) (err error) {`)
 		switch m.httpBody {
 		case "":
-			p.P(`if r != nil {`)
+			p.P(`if len(r) != 0 {`)
 			p.P(`return fmt.Errorf("Body is not allowed")`)
 			p.P(`}`)
 			p.P(`return nil`)
@@ -337,5 +335,3 @@ func (p *Plugin) getMessage(t string) *descriptor.DescriptorProto {
 	file := p.ObjectNamed(t).File()
 	return file.GetMessage(strings.TrimPrefix(t, "."+file.GetPackage()+"."))
 }
-
-
