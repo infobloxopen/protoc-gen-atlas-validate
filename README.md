@@ -66,3 +66,37 @@ protoc -I/usr/local/include \
 		--atlas-validate_out="$GOPATH/src" \
 			<path-to-your-file>
 ```
+
+The following will generate pb.atlas.validate.go file that contains validation
+logic and MetadataAnnotator that you will have to include in GRPC Server options.
+
+### Usage
+
+Import atlas-validate Interceptor:
+
+```
+import atlas_validate "github.com/infobloxopen/protoc-gen-atlas-validate/interceptor"
+```
+
+Add generated AtlasValidateAnnotator (from \*.pb.atlas.validate.go) to a Metadata anotators:
+
+```
+gateway.WithGatewayOptions(
+	runtime.WithMetadata(pb.AtlasValidateAnnotator),
+)
+```
+
+Add interceptor that extracts error from metadata and returns it to a user:
+
+```
+gateway.WithDialOptions(
+	[]grpc.DialOption{grpc.WithInsecure(), grpc.WithUnaryInterceptor(
+		grpc_middleware.ChainUnaryClient(
+			[]grpc.UnaryClientInterceptor{
+				gateway.ClientUnaryInterceptor,
+				atlas_validate.ValidationClientInterceptor(),
+			},
+		)
+	)
+)
+```
