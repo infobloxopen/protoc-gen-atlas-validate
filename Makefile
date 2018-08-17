@@ -35,7 +35,6 @@ install:
 .PHONY: gentool
 gentool:
 	@docker build -f $(GENVALIDATE_DOCKERFILE) -t $(GENVALIDATE_IMAGE):$(IMAGE_VERSION) .
-	#@docker tag $(GENVALIDATE_IMAGE):$(IMAGE_VERSION) $(GENVALIDATE_IMAGE):latest
 	@docker image prune -f --filter label=stage=server-intermediate
 
 gentool-examples: gentool
@@ -45,6 +44,13 @@ gentool-examples: gentool
 		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
                 --atlas-validate_out="$(DOCKERPATH)" \
                         example/examplepb/example.proto
+
+	        @$(GENERATOR) \
+		-I/go/src/github.com/infobloxopen/protoc-gen-atlas-validate \
+                --go_out="plugins=grpc:$(DOCKERPATH)" \
+		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
+                --atlas-validate_out="$(DOCKERPATH)" \
+                        example/external/external.proto
 
 gentool-options:
 	@$(GENERATOR) \

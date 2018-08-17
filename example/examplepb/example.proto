@@ -5,6 +5,7 @@ package example;
 import "google/api/annotations.proto";
 
 import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
+import "github.com/infobloxopen/protoc-gen-atlas-validate/example/external/external.proto";
 
 option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/examplepb;examplepb";
 
@@ -20,6 +21,8 @@ message User {
 	};
 
 	repeated Parent parents = 6;
+
+	external.ExternalUser external_user = 7;
 }
 
 message Address {
@@ -72,6 +75,20 @@ service Users {
 			additional_bindings: {
 				get: "/antother_users";
 			};
+		};
+	}
+
+	rpc UpdateExternalUser(User) returns (EmptyResponse) {
+		option (google.api.http) = {
+			put: "/external_users";
+                        body: "external_user";
+		};
+	}
+
+	rpc UpdateExternalUser2(external.ExternalUser) returns (EmptyResponse) {
+		option (google.api.http) = {
+			put: "/external_users_update";
+			body: "*";
 		};
 	}
 }

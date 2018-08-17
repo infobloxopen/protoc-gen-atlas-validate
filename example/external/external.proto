@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package external;
+
+import "google/api/annotations.proto";
+
+option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/external;external";
+
+message ExternalUser {
+	int32 id = 1;
+	string name = 2;
+	ExternalAddress address = 4;
+	message Parent {
+		string name = 1;
+	};
+}
+
+message ExternalAddress {
+	string country = 1;
+	string state = 2;
+	string city = 3;
+	string zip = 4;
+}

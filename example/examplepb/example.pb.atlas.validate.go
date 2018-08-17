@@ -12,8 +12,10 @@ import context "golang.org/x/net/context"
 import metadata "google.golang.org/grpc/metadata"
 import runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 import validate_runtime "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
+import google_protobuf1 "github.com/infobloxopen/protoc-gen-atlas-validate/example/external"
 import proto "github.com/gogo/protobuf/proto"
 import math "math"
+import _ "github.com/infobloxopen/protoc-gen-atlas-validate/example/external"
 import _ "github.com/infobloxopen/protoc-gen-atlas-validate/options"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
 
@@ -22,18 +24,26 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// validate_Users_Create_0 is an entrypoint for validating "POST" HTTP request
+// that match *.pb.gw.go/pattern_Users_Create_0.
 func validate_Users_Create_0(r json.RawMessage) (err error) {
 	return validate_Object_User(r, "", false)
 }
 
+// validate_Users_Update_0 is an entrypoint for validating "PUT" HTTP request
+// that match *.pb.gw.go/pattern_Users_Update_0.
 func validate_Users_Update_0(r json.RawMessage) (err error) {
 	return validate_Object_User(r, "", false)
 }
 
+// validate_Users_Update_1 is an entrypoint for validating "PATCH" HTTP request
+// that match *.pb.gw.go/pattern_Users_Update_1.
 func validate_Users_Update_1(r json.RawMessage) (err error) {
 	return validate_Object_User(r, "", false)
 }
 
+// validate_Users_List_0 is an entrypoint for validating "GET" HTTP request
+// that match *.pb.gw.go/pattern_Users_List_0.
 func validate_Users_List_0(r json.RawMessage) (err error) {
 	if r != nil {
 		return fmt.Errorf("Body is not allowed")
@@ -41,6 +51,8 @@ func validate_Users_List_0(r json.RawMessage) (err error) {
 	return nil
 }
 
+// validate_Users_List_1 is an entrypoint for validating "GET" HTTP request
+// that match *.pb.gw.go/pattern_Users_List_1.
 func validate_Users_List_1(r json.RawMessage) (err error) {
 	if r != nil {
 		return fmt.Errorf("Body is not allowed")
@@ -48,22 +60,54 @@ func validate_Users_List_1(r json.RawMessage) (err error) {
 	return nil
 }
 
+// validate_Users_UpdateExternalUser_0 is an entrypoint for validating "PUT" HTTP request
+// that match *.pb.gw.go/pattern_Users_UpdateExternalUser_0.
+func validate_Users_UpdateExternalUser_0(r json.RawMessage) (err error) {
+	if validator, ok := interface{}(google_protobuf1.ExternalUser{}).(interface {
+		AtlasValidateJSON(json.RawMessage, string, bool) error
+	}); ok {
+		return validator.AtlasValidateJSON(r, "", false)
+	}
+	return nil
+}
+
+// validate_Users_UpdateExternalUser2_0 is an entrypoint for validating "PUT" HTTP request
+// that match *.pb.gw.go/pattern_Users_UpdateExternalUser2_0.
+func validate_Users_UpdateExternalUser2_0(r json.RawMessage) (err error) {
+	if validator, ok := interface{}(google_protobuf1.ExternalUser{}).(interface {
+		AtlasValidateJSON(json.RawMessage, string, bool) error
+	}); ok {
+		return validator.AtlasValidateJSON(r, "", false)
+	}
+	return nil
+}
+
+// validate_Profiles_Create_0 is an entrypoint for validating "POST" HTTP request
+// that match *.pb.gw.go/pattern_Profiles_Create_0.
 func validate_Profiles_Create_0(r json.RawMessage) (err error) {
 	return validate_Object_Profile(r, "", false)
 }
 
+// validate_Profiles_Update_0 is an entrypoint for validating "PUT" HTTP request
+// that match *.pb.gw.go/pattern_Profiles_Update_0.
 func validate_Profiles_Update_0(r json.RawMessage) (err error) {
 	return validate_Object_Profile(r, "", true)
 }
 
+// validate_Groups_Create_0 is an entrypoint for validating "POST" HTTP request
+// that match *.pb.gw.go/pattern_Groups_Create_0.
 func validate_Groups_Create_0(r json.RawMessage) (err error) {
 	return validate_Object_Group(r, "", true)
 }
 
+// validate_Groups_Update_0 is an entrypoint for validating "PUT" HTTP request
+// that match *.pb.gw.go/pattern_Groups_Update_0.
 func validate_Groups_Update_0(r json.RawMessage) (err error) {
 	return validate_Object_Group(r, "", true)
 }
 
+// validate_Groups_ValidatedList_0 is an entrypoint for validating "GET" HTTP request
+// that match *.pb.gw.go/pattern_Groups_ValidatedList_0.
 func validate_Groups_ValidatedList_0(r json.RawMessage) (err error) {
 	if r != nil {
 		return fmt.Errorf("Body is not allowed")
@@ -71,6 +115,8 @@ func validate_Groups_ValidatedList_0(r json.RawMessage) (err error) {
 	return nil
 }
 
+// validate_Groups_ValidatedList_1 is an entrypoint for validating "GET" HTTP request
+// that match *.pb.gw.go/pattern_Groups_ValidatedList_1.
 func validate_Groups_ValidatedList_1(r json.RawMessage) (err error) {
 	if r != nil {
 		return fmt.Errorf("Body is not allowed")
@@ -78,6 +124,7 @@ func validate_Groups_ValidatedList_1(r json.RawMessage) (err error) {
 	return nil
 }
 
+// validate_Object_User function validates a JSON for a given object.
 func validate_Object_User(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(&User{}).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -142,6 +189,21 @@ func validate_Object_User(r json.RawMessage, path string, allowUnknown bool) (er
 					return err
 				}
 			}
+		case "external_user":
+			if v[k] == nil {
+				continue
+			}
+			vv := v[k]
+			vvPath := validate_runtime.JoinPath(path, k)
+			validator, ok := interface{}(&google_protobuf1.ExternalUser{}).(interface {
+				AtlasValidateJSON(json.RawMessage, string, bool) error
+			})
+			if !ok {
+				continue
+			}
+			if err = validator.AtlasValidateJSON(vv, vvPath, allowUnknown); err != nil {
+				return err
+			}
 		default:
 			if !allowUnknown {
 				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
@@ -151,6 +213,7 @@ func validate_Object_User(r json.RawMessage, path string, allowUnknown bool) (er
 	return nil
 }
 
+// AtlasValidateJSON function validates a JSON for object User.
 func (o *User) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -162,6 +225,7 @@ func (o *User) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bo
 	return validate_Object_User(r, path, allowUnknown)
 }
 
+// validate_Object_User_Parent function validates a JSON for a given object.
 func validate_Object_User_Parent(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(&User_Parent{}).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -186,6 +250,7 @@ func validate_Object_User_Parent(r json.RawMessage, path string, allowUnknown bo
 	return nil
 }
 
+// AtlasValidateJSON function validates a JSON for object User_Parent.
 func (o *User_Parent) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -197,6 +262,7 @@ func (o *User_Parent) AtlasValidateJSON(r json.RawMessage, path string, allowUnk
 	return validate_Object_User_Parent(r, path, allowUnknown)
 }
 
+// validate_Object_Address function validates a JSON for a given object.
 func validate_Object_Address(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(&Address{}).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -224,6 +290,7 @@ func validate_Object_Address(r json.RawMessage, path string, allowUnknown bool) 
 	return nil
 }
 
+// AtlasValidateJSON function validates a JSON for object Address.
 func (o *Address) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -235,6 +302,7 @@ func (o *Address) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown
 	return validate_Object_Address(r, path, allowUnknown)
 }
 
+// validate_Object_Group function validates a JSON for a given object.
 func validate_Object_Group(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(&Group{}).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -261,6 +329,7 @@ func validate_Object_Group(r json.RawMessage, path string, allowUnknown bool) (e
 	return nil
 }
 
+// AtlasValidateJSON function validates a JSON for object Group.
 func (o *Group) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -272,6 +341,7 @@ func (o *Group) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown b
 	return validate_Object_Group(r, path, allowUnknown)
 }
 
+// validate_Object_CreateUserRequest function validates a JSON for a given object.
 func validate_Object_CreateUserRequest(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(&CreateUserRequest{}).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -304,6 +374,7 @@ func validate_Object_CreateUserRequest(r json.RawMessage, path string, allowUnkn
 	return nil
 }
 
+// AtlasValidateJSON function validates a JSON for object CreateUserRequest.
 func (o *CreateUserRequest) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -315,6 +386,7 @@ func (o *CreateUserRequest) AtlasValidateJSON(r json.RawMessage, path string, al
 	return validate_Object_CreateUserRequest(r, path, allowUnknown)
 }
 
+// validate_Object_UpdateUserRequest function validates a JSON for a given object.
 func validate_Object_UpdateUserRequest(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(&UpdateUserRequest{}).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -347,6 +419,7 @@ func validate_Object_UpdateUserRequest(r json.RawMessage, path string, allowUnkn
 	return nil
 }
 
+// AtlasValidateJSON function validates a JSON for object UpdateUserRequest.
 func (o *UpdateUserRequest) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -358,6 +431,7 @@ func (o *UpdateUserRequest) AtlasValidateJSON(r json.RawMessage, path string, al
 	return validate_Object_UpdateUserRequest(r, path, allowUnknown)
 }
 
+// validate_Object_EmptyRequest function validates a JSON for a given object.
 func validate_Object_EmptyRequest(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(&EmptyRequest{}).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -381,6 +455,7 @@ func validate_Object_EmptyRequest(r json.RawMessage, path string, allowUnknown b
 	return nil
 }
 
+// AtlasValidateJSON function validates a JSON for object EmptyRequest.
 func (o *EmptyRequest) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -392,6 +467,7 @@ func (o *EmptyRequest) AtlasValidateJSON(r json.RawMessage, path string, allowUn
 	return validate_Object_EmptyRequest(r, path, allowUnknown)
 }
 
+// validate_Object_EmptyResponse function validates a JSON for a given object.
 func validate_Object_EmptyResponse(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(&EmptyResponse{}).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -415,6 +491,7 @@ func validate_Object_EmptyResponse(r json.RawMessage, path string, allowUnknown 
 	return nil
 }
 
+// AtlasValidateJSON function validates a JSON for object EmptyResponse.
 func (o *EmptyResponse) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -426,6 +503,7 @@ func (o *EmptyResponse) AtlasValidateJSON(r json.RawMessage, path string, allowU
 	return validate_Object_EmptyResponse(r, path, allowUnknown)
 }
 
+// validate_Object_Profile function validates a JSON for a given object.
 func validate_Object_Profile(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(&Profile{}).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -452,6 +530,7 @@ func validate_Object_Profile(r json.RawMessage, path string, allowUnknown bool) 
 	return nil
 }
 
+// AtlasValidateJSON function validates a JSON for object Profile.
 func (o *Profile) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -463,6 +542,7 @@ func (o *Profile) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown
 	return validate_Object_Profile(r, path, allowUnknown)
 }
 
+// validate_Object_UpdateProfileRequest function validates a JSON for a given object.
 func validate_Object_UpdateProfileRequest(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(&UpdateProfileRequest{}).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -495,6 +575,7 @@ func validate_Object_UpdateProfileRequest(r json.RawMessage, path string, allowU
 	return nil
 }
 
+// AtlasValidateJSON function validates a JSON for object UpdateProfileRequest.
 func (o *UpdateProfileRequest) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -544,6 +625,18 @@ var validate_Patterns = []struct {
 		allowUnknown: false,
 	},
 	{
+		pattern:      pattern_Users_UpdateExternalUser_0,
+		httpMethod:   "PUT",
+		validator:    validate_Users_UpdateExternalUser_0,
+		allowUnknown: false,
+	},
+	{
+		pattern:      pattern_Users_UpdateExternalUser2_0,
+		httpMethod:   "PUT",
+		validator:    validate_Users_UpdateExternalUser2_0,
+		allowUnknown: false,
+	},
+	{
 		pattern:      pattern_Profiles_Create_0,
 		httpMethod:   "POST",
 		validator:    validate_Profiles_Create_0,
@@ -582,7 +675,7 @@ var validate_Patterns = []struct {
 }
 
 // AtlasValidateAnnotator parses JSON input and validates unknown fields
-// based on 'allow_unknown_fields options specified in proto file.
+// based on 'allow_unknown_fields' options specified in proto file.
 func AtlasValidateAnnotator(ctx context.Context, r *http.Request) metadata.MD {
 	md := make(metadata.MD)
 	for _, v := range validate_Patterns {
