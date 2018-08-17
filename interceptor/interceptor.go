@@ -22,16 +22,26 @@ func ValidationClientInterceptor() grpc.UnaryClientInterceptor {
                         return
                 }
 
-		imd, _ := metadata.FromIncomingContext(ctx)
-		omd, _ := metadata.FromOutgoingContext(ctx)
-
-		md := metadata.Join(imd, omd)
-
-		errors := md.Get(ValidationErrorMetaKey)
-		if len(errors) > 0 && errors[0] != "" {
-			return status.Error(codes.InvalidArgument, errors[0])
+		if err := GetAtlasValidationError(ctx); err != nil {
+			return status.Error(codes.InvalidArgument, err.Error())
 		}
 
                 return invoker(ctx, method, req, reply, cc, opts...)
         }
 }
+
+func GetAtlasValidationError(ctx context.Context) error {
+	imd, _ := metadata.FromIncomingContext(ctx)
+	omd, _ := metadata.FromOutgoingContext(ctx)
+
+	md := metadata.Join(imd, omd)
+
+	errors := md.Get(ValidationErrorMetaKey)
+
+	if len(errors) > 0 && errors[0] != "" {
+		return fmt.Errorf(errors[0])
+	}
+
+	return nil
+}
+

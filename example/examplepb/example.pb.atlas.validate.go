@@ -22,68 +22,74 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// DefaultValidateJSON Profile validates JSON values for Profile
-func DefaultProfileValidateJSON(v map[string]interface{}, path string) (err error) {
-
-	for k, _ := range v {
-		switch k {
-		case "id":
-		case "name":
-		case "notes":
-		default:
-			return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
-		}
-	}
-	return err
+func validate_Users_Create_0(r json.RawMessage) (err error) {
+	return validate_Object_User(r, "", false)
 }
 
-// DefaultValidateJSON Address validates JSON values for Address
-func DefaultAddressValidateJSON(v map[string]interface{}, path string) (err error) {
-
-	for k, _ := range v {
-		switch k {
-		case "country":
-		case "state":
-		case "city":
-		case "zip":
-		default:
-			return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
-		}
-	}
-	return err
+func validate_Users_Update_0(r json.RawMessage) (err error) {
+	return validate_Object_User(r, "", false)
 }
 
-// DefaultValidateJSON Group validates JSON values for Group
-func DefaultGroupValidateJSON(v map[string]interface{}, path string) (err error) {
-
-	for k, _ := range v {
-		switch k {
-		case "id":
-		case "name":
-		case "notes":
-		default:
-			continue
-		}
-	}
-	return err
+func validate_Users_Update_1(r json.RawMessage) (err error) {
+	return validate_Object_User(r, "", false)
 }
 
-// DefaultValidateJSON UserParent validates JSON values for UserParent
-func DefaultUserParentValidateJSON(v map[string]interface{}, path string) (err error) {
-
-	for k, _ := range v {
-		switch k {
-		case "name":
-		default:
-			return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
-		}
+func validate_Users_List_0(r json.RawMessage) (err error) {
+	if r != nil {
+		return fmt.Errorf("Body is not allowed")
 	}
-	return err
+	return nil
 }
 
-// DefaultValidateJSON User validates JSON values for User
-func DefaultUserValidateJSON(v map[string]interface{}, path string) (err error) {
+func validate_Users_List_1(r json.RawMessage) (err error) {
+	if r != nil {
+		return fmt.Errorf("Body is not allowed")
+	}
+	return nil
+}
 
+func validate_Profiles_Create_0(r json.RawMessage) (err error) {
+	return validate_Object_Profile(r, "", false)
+}
+
+func validate_Profiles_Update_0(r json.RawMessage) (err error) {
+	return validate_Object_Profile(r, "", true)
+}
+
+func validate_Groups_Create_0(r json.RawMessage) (err error) {
+	return validate_Object_Group(r, "", true)
+}
+
+func validate_Groups_Update_0(r json.RawMessage) (err error) {
+	return validate_Object_Group(r, "", true)
+}
+
+func validate_Groups_ValidatedList_0(r json.RawMessage) (err error) {
+	if r != nil {
+		return fmt.Errorf("Body is not allowed")
+	}
+	return nil
+}
+
+func validate_Groups_ValidatedList_1(r json.RawMessage) (err error) {
+	if r != nil {
+		return fmt.Errorf("Body is not allowed")
+	}
+	return nil
+}
+
+func validate_Object_User(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(&User{}).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	var v map[string]json.RawMessage
+	if err = json.Unmarshal(r, &v); err != nil {
+		return fmt.Errorf("Invalid value for %q: expected object.", path)
+	}
 	for k, _ := range v {
 		switch k {
 		case "id":
@@ -93,290 +99,502 @@ func DefaultUserValidateJSON(v map[string]interface{}, path string) (err error) 
 				continue
 			}
 			vv := v[k]
-			if v, ok := vv.(map[string]interface{}); ok {
-				if validator, ok := interface{}(&Profile{}).(interface {
-					ValidateJSON(map[string]interface{}, string) error
-				}); ok {
-					if err = validator.ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
-						return err
-					}
-				} else {
-					if err = DefaultProfileValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
-						return err
-					}
-				}
-			} else {
-				return fmt.Errorf("Invalid value for %q: expected object", validate_runtime.JoinPath(path, k))
+			vvPath := validate_runtime.JoinPath(path, k)
+			if err = validate_Object_Profile(vv, vvPath, allowUnknown); err != nil {
+				return err
 			}
 		case "address":
 			if v[k] == nil {
 				continue
 			}
 			vv := v[k]
-			if v, ok := vv.(map[string]interface{}); ok {
-				if validator, ok := interface{}(&Address{}).(interface {
-					ValidateJSON(map[string]interface{}, string) error
-				}); ok {
-					if err = validator.ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
-						return err
-					}
-				} else {
-					if err = DefaultAddressValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
-						return err
-					}
-				}
-			} else {
-				return fmt.Errorf("Invalid value for %q: expected object", validate_runtime.JoinPath(path, k))
+			vvPath := validate_runtime.JoinPath(path, k)
+			if err = validate_Object_Address(vv, vvPath, allowUnknown); err != nil {
+				return err
 			}
 		case "groups":
 			if v[k] == nil {
 				continue
 			}
-			vv := v[k]
-			if vArr, ok := vv.([]interface{}); ok {
-				if validator, ok := interface{}(&Group{}).(interface {
-					ValidateJSON(map[string]interface{}, string) error
-				}); ok {
-					for i, vVal := range vArr {
-						if vVal == nil {
-							continue
-						}
-						aPath := fmt.Sprintf("%s.[%d]", validate_runtime.JoinPath(path, k), i)
-						if v, ok := vVal.(map[string]interface{}); ok {
-							if err = validator.ValidateJSON(v, aPath); err != nil {
-								return err
-							}
-						} else {
-							return fmt.Errorf("Invalid value for %q: expected object", aPath)
-						}
-					}
-				} else {
-					for i, vVal := range vArr {
-						if vVal == nil {
-							continue
-						}
-						aPath := fmt.Sprintf("%s.[%d]", validate_runtime.JoinPath(path, k), i)
-						if v, ok := vVal.(map[string]interface{}); ok {
-							if err = DefaultGroupValidateJSON(v, aPath); err != nil {
-								return err
-							}
-						} else {
-							return fmt.Errorf("Invalid value for %q: expected object", aPath)
-						}
-					}
+			var vArr []json.RawMessage
+			vArrPath := validate_runtime.JoinPath(path, k)
+			if err = json.Unmarshal(v[k], &vArr); err != nil {
+				return fmt.Errorf("Invalid value for %q: expected array.", vArrPath)
+			}
+			for i, vv := range vArr {
+				vvPath := fmt.Sprintf("%s.[%d]", vArrPath, i)
+				if err = validate_Object_Group(vv, vvPath, allowUnknown); err != nil {
+					return err
 				}
-			} else {
-				return fmt.Errorf("Invalid value for %q: expected array", validate_runtime.JoinPath(path, k))
 			}
 		case "parents":
 			if v[k] == nil {
 				continue
 			}
-			vv := v[k]
-			if vArr, ok := vv.([]interface{}); ok {
-				if validator, ok := interface{}(&User_Parent{}).(interface {
-					ValidateJSON(map[string]interface{}, string) error
-				}); ok {
-					for i, vVal := range vArr {
-						if vVal == nil {
-							continue
-						}
-						aPath := fmt.Sprintf("%s.[%d]", validate_runtime.JoinPath(path, k), i)
-						if v, ok := vVal.(map[string]interface{}); ok {
-							if err = validator.ValidateJSON(v, aPath); err != nil {
-								return err
-							}
-						} else {
-							return fmt.Errorf("Invalid value for %q: expected object", aPath)
-						}
-					}
-				} else {
-					for i, vVal := range vArr {
-						if vVal == nil {
-							continue
-						}
-						aPath := fmt.Sprintf("%s.[%d]", validate_runtime.JoinPath(path, k), i)
-						if v, ok := vVal.(map[string]interface{}); ok {
-							if err = DefaultUserParentValidateJSON(v, aPath); err != nil {
-								return err
-							}
-						} else {
-							return fmt.Errorf("Invalid value for %q: expected object", aPath)
-						}
-					}
+			var vArr []json.RawMessage
+			vArrPath := validate_runtime.JoinPath(path, k)
+			if err = json.Unmarshal(v[k], &vArr); err != nil {
+				return fmt.Errorf("Invalid value for %q: expected array.", vArrPath)
+			}
+			for i, vv := range vArr {
+				vvPath := fmt.Sprintf("%s.[%d]", vArrPath, i)
+				if err = validate_Object_User_Parent(vv, vvPath, allowUnknown); err != nil {
+					return err
 				}
-			} else {
-				return fmt.Errorf("Invalid value for %q: expected array", validate_runtime.JoinPath(path, k))
 			}
 		default:
-			return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			if !allowUnknown {
+				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			}
 		}
 	}
-	return err
+	return nil
 }
 
-// DefaultValidateJSON CreateUserRequest validates JSON values for CreateUserRequest
-func DefaultCreateUserRequestValidateJSON(v map[string]interface{}, path string) (err error) {
-
-	var k = ""
-	if validator, ok := interface{}(&User{}).(interface {
-		ValidateJSON(map[string]interface{}, string) error
+func (o *User) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(o).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
 	}); ok {
-		if err = validator.ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
-			return err
-		}
-	} else {
-		if err = DefaultUserValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
 			return err
 		}
 	}
-	return err
+	return validate_Object_User(r, path, allowUnknown)
 }
 
-// DefaultValidateJSON UpdateUserRequest validates JSON values for UpdateUserRequest
-func DefaultUpdateUserRequestValidateJSON(v map[string]interface{}, path string) (err error) {
-
-	var k = ""
-	if validator, ok := interface{}(&User{}).(interface {
-		ValidateJSON(map[string]interface{}, string) error
+func validate_Object_User_Parent(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(&User_Parent{}).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
 	}); ok {
-		if err = validator.ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
-			return err
-		}
-	} else {
-		if err = DefaultUserValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
 			return err
 		}
 	}
-	return err
-}
-
-// DefaultValidateJSON EmptyRequest validates JSON values for EmptyRequest
-func DefaultEmptyRequestValidateJSON(v map[string]interface{}, path string) (err error) {
-
-	if v != nil {
-		err = fmt.Errorf("Body is not allowed")
-		return err
+	var v map[string]json.RawMessage
+	if err = json.Unmarshal(r, &v); err != nil {
+		return fmt.Errorf("Invalid value for %q: expected object.", path)
 	}
-	return err
+	for k, _ := range v {
+		switch k {
+		case "name":
+		default:
+			if !allowUnknown {
+				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			}
+		}
+	}
+	return nil
 }
 
-// DefaultValidateJSON UpdateProfileRequest validates JSON values for UpdateProfileRequest
-func DefaultUpdateProfileRequestValidateJSON(v map[string]interface{}, path string) (err error) {
-
-	var k = ""
-	if validator, ok := interface{}(&Profile{}).(interface {
-		ValidateJSON(map[string]interface{}, string) error
+func (o *User_Parent) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(o).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
 	}); ok {
-		if err = validator.ValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
-			return err
-		}
-	} else {
-		if err = DefaultProfileValidateJSON(v, validate_runtime.JoinPath(path, k)); err != nil {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
 			return err
 		}
 	}
-	return err
+	return validate_Object_User_Parent(r, path, allowUnknown)
 }
 
-var patterns = []struct {
-	method    string
-	pattern   runtime.Pattern
-	validator func(map[string]interface{}, string) error
+func validate_Object_Address(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(&Address{}).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	var v map[string]json.RawMessage
+	if err = json.Unmarshal(r, &v); err != nil {
+		return fmt.Errorf("Invalid value for %q: expected object.", path)
+	}
+	for k, _ := range v {
+		switch k {
+		case "country":
+		case "state":
+		case "city":
+		case "zip":
+		default:
+			if !allowUnknown {
+				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			}
+		}
+	}
+	return nil
+}
+
+func (o *Address) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(o).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	return validate_Object_Address(r, path, allowUnknown)
+}
+
+func validate_Object_Group(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(&Group{}).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	var v map[string]json.RawMessage
+	if err = json.Unmarshal(r, &v); err != nil {
+		return fmt.Errorf("Invalid value for %q: expected object.", path)
+	}
+	for k, _ := range v {
+		switch k {
+		case "id":
+		case "name":
+		case "notes":
+		default:
+			if !allowUnknown {
+				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			}
+		}
+	}
+	return nil
+}
+
+func (o *Group) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(o).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	return validate_Object_Group(r, path, allowUnknown)
+}
+
+func validate_Object_CreateUserRequest(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(&CreateUserRequest{}).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	var v map[string]json.RawMessage
+	if err = json.Unmarshal(r, &v); err != nil {
+		return fmt.Errorf("Invalid value for %q: expected object.", path)
+	}
+	for k, _ := range v {
+		switch k {
+		case "payload":
+			if v[k] == nil {
+				continue
+			}
+			vv := v[k]
+			vvPath := validate_runtime.JoinPath(path, k)
+			if err = validate_Object_User(vv, vvPath, allowUnknown); err != nil {
+				return err
+			}
+		default:
+			if !allowUnknown {
+				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			}
+		}
+	}
+	return nil
+}
+
+func (o *CreateUserRequest) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(o).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	return validate_Object_CreateUserRequest(r, path, allowUnknown)
+}
+
+func validate_Object_UpdateUserRequest(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(&UpdateUserRequest{}).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	var v map[string]json.RawMessage
+	if err = json.Unmarshal(r, &v); err != nil {
+		return fmt.Errorf("Invalid value for %q: expected object.", path)
+	}
+	for k, _ := range v {
+		switch k {
+		case "payload":
+			if v[k] == nil {
+				continue
+			}
+			vv := v[k]
+			vvPath := validate_runtime.JoinPath(path, k)
+			if err = validate_Object_User(vv, vvPath, allowUnknown); err != nil {
+				return err
+			}
+		default:
+			if !allowUnknown {
+				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			}
+		}
+	}
+	return nil
+}
+
+func (o *UpdateUserRequest) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(o).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	return validate_Object_UpdateUserRequest(r, path, allowUnknown)
+}
+
+func validate_Object_EmptyRequest(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(&EmptyRequest{}).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	var v map[string]json.RawMessage
+	if err = json.Unmarshal(r, &v); err != nil {
+		return fmt.Errorf("Invalid value for %q: expected object.", path)
+	}
+	for k, _ := range v {
+		switch k {
+		default:
+			if !allowUnknown {
+				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			}
+		}
+	}
+	return nil
+}
+
+func (o *EmptyRequest) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(o).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	return validate_Object_EmptyRequest(r, path, allowUnknown)
+}
+
+func validate_Object_EmptyResponse(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(&EmptyResponse{}).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	var v map[string]json.RawMessage
+	if err = json.Unmarshal(r, &v); err != nil {
+		return fmt.Errorf("Invalid value for %q: expected object.", path)
+	}
+	for k, _ := range v {
+		switch k {
+		default:
+			if !allowUnknown {
+				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			}
+		}
+	}
+	return nil
+}
+
+func (o *EmptyResponse) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(o).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	return validate_Object_EmptyResponse(r, path, allowUnknown)
+}
+
+func validate_Object_Profile(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(&Profile{}).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	var v map[string]json.RawMessage
+	if err = json.Unmarshal(r, &v); err != nil {
+		return fmt.Errorf("Invalid value for %q: expected object.", path)
+	}
+	for k, _ := range v {
+		switch k {
+		case "id":
+		case "name":
+		case "notes":
+		default:
+			if !allowUnknown {
+				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			}
+		}
+	}
+	return nil
+}
+
+func (o *Profile) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(o).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	return validate_Object_Profile(r, path, allowUnknown)
+}
+
+func validate_Object_UpdateProfileRequest(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(&UpdateProfileRequest{}).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	var v map[string]json.RawMessage
+	if err = json.Unmarshal(r, &v); err != nil {
+		return fmt.Errorf("Invalid value for %q: expected object.", path)
+	}
+	for k, _ := range v {
+		switch k {
+		case "payload":
+			if v[k] == nil {
+				continue
+			}
+			vv := v[k]
+			vvPath := validate_runtime.JoinPath(path, k)
+			if err = validate_Object_Profile(vv, vvPath, allowUnknown); err != nil {
+				return err
+			}
+		default:
+			if !allowUnknown {
+				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+			}
+		}
+	}
+	return nil
+}
+
+func (o *UpdateProfileRequest) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+	if hook, ok := interface{}(o).(interface {
+		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
+	}); ok {
+		if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {
+			return err
+		}
+	}
+	return validate_Object_UpdateProfileRequest(r, path, allowUnknown)
+}
+
+var validate_Patterns = []struct {
+	pattern    runtime.Pattern
+	httpMethod string
+	validator  func(json.RawMessage) error
+	// Included for introspection purpose.
+	allowUnknown bool
 }{
 	{
-		method:    "POST",
-		pattern:   pattern_Users_Create_0,
-		validator: DefaultCreateUserRequestValidateJSON,
+		pattern:      pattern_Users_Create_0,
+		httpMethod:   "POST",
+		validator:    validate_Users_Create_0,
+		allowUnknown: false,
 	},
-
 	{
-		method:    "PUT",
-		pattern:   pattern_Users_Update_0,
-		validator: DefaultUpdateUserRequestValidateJSON,
+		pattern:      pattern_Users_Update_0,
+		httpMethod:   "PUT",
+		validator:    validate_Users_Update_0,
+		allowUnknown: false,
 	},
-
 	{
-		method:    "PATCH",
-		pattern:   pattern_Users_Update_1,
-		validator: DefaultUpdateUserRequestValidateJSON,
+		pattern:      pattern_Users_Update_1,
+		httpMethod:   "PATCH",
+		validator:    validate_Users_Update_1,
+		allowUnknown: false,
 	},
-
 	{
-		method:    "GET",
-		pattern:   pattern_Users_List_0,
-		validator: DefaultEmptyRequestValidateJSON,
+		pattern:      pattern_Users_List_0,
+		httpMethod:   "GET",
+		validator:    validate_Users_List_0,
+		allowUnknown: false,
 	},
-
 	{
-		method:    "GET",
-		pattern:   pattern_Users_List_1,
-		validator: DefaultEmptyRequestValidateJSON,
+		pattern:      pattern_Users_List_1,
+		httpMethod:   "GET",
+		validator:    validate_Users_List_1,
+		allowUnknown: false,
 	},
-
 	{
-		method:    "POST",
-		pattern:   pattern_Profiles_Create_0,
-		validator: DefaultProfileValidateJSON,
+		pattern:      pattern_Profiles_Create_0,
+		httpMethod:   "POST",
+		validator:    validate_Profiles_Create_0,
+		allowUnknown: false,
 	},
-
-	// excluded by allowUnknown option.
-	// {
-	// method: "PUT",
-	// pattern: pattern_Profiles_Update_0,
-	// validator: DefaultUpdateProfileRequestValidateJSON,
-	// },
-
-	// excluded by allowUnknown option.
-	// {
-	// method: "POST",
-	// pattern: pattern_Groups_Create_0,
-	// validator: DefaultGroupValidateJSON,
-	// },
-
-	// excluded by allowUnknown option.
-	// {
-	// method: "PUT",
-	// pattern: pattern_Groups_Update_0,
-	// validator: DefaultGroupValidateJSON,
-	// },
-
 	{
-		method:    "GET",
-		pattern:   pattern_Groups_ValidatedList_0,
-		validator: DefaultEmptyRequestValidateJSON,
+		pattern:      pattern_Profiles_Update_0,
+		httpMethod:   "PUT",
+		validator:    validate_Profiles_Update_0,
+		allowUnknown: true,
 	},
-
 	{
-		method:    "GET",
-		pattern:   pattern_Groups_ValidatedList_1,
-		validator: DefaultEmptyRequestValidateJSON,
+		pattern:      pattern_Groups_Create_0,
+		httpMethod:   "POST",
+		validator:    validate_Groups_Create_0,
+		allowUnknown: true,
+	},
+	{
+		pattern:      pattern_Groups_Update_0,
+		httpMethod:   "PUT",
+		validator:    validate_Groups_Update_0,
+		allowUnknown: true,
+	},
+	{
+		pattern:      pattern_Groups_ValidatedList_0,
+		httpMethod:   "GET",
+		validator:    validate_Groups_ValidatedList_0,
+		allowUnknown: false,
+	},
+	{
+		pattern:      pattern_Groups_ValidatedList_1,
+		httpMethod:   "GET",
+		validator:    validate_Groups_ValidatedList_1,
+		allowUnknown: false,
 	},
 }
 
-// ValidationAnnotator function validates JSON.
-func ValidationAnnotator(ctx context.Context, r *http.Request) metadata.MD {
-	var jv map[string]interface{}
-
+// AtlasValidateAnnotator parses JSON input and validates unknown fields
+// based on 'allow_unknown_fields options specified in proto file.
+func AtlasValidateAnnotator(ctx context.Context, r *http.Request) metadata.MD {
 	md := make(metadata.MD)
-	if len(patterns) == 0 {
-		return md
-	}
-	b, err := ioutil.ReadAll(r.Body)
-	r.Body = ioutil.NopCloser(bytes.NewReader(b))
-	if err != nil {
-		md.Set("Atlas-Validation-Error", fmt.Sprintf("Unable to read JSON request"))
-		return md
-	} else if err := json.Unmarshal(b, &jv); err != nil {
-		if len(b) != 0 {
-			md.Set("Atlas-Validation-Error", fmt.Sprintf("Unable to parse JSON request"))
-			return md
-		}
-	}
-
-	for _, v := range patterns {
-		if r.Method == v.method && validate_runtime.PatternMatch(v.pattern, r.URL.Path) {
-			if err := v.validator(jv, ""); err != nil {
+	for _, v := range validate_Patterns {
+		if r.Method == v.httpMethod && validate_runtime.PatternMatch(v.pattern, r.URL.Path) {
+			var b []byte
+			var err error
+			if b, err = ioutil.ReadAll(r.Body); err != nil {
+				md.Set("Atlas-Validation-Error", "Invalid value: unable to parse body")
+				return md
+			}
+			r.Body = ioutil.NopCloser(bytes.NewReader(b))
+			if err = v.validator(b); err != nil {
 				md.Set("Atlas-Validation-Error", err.Error())
 			}
 			break
