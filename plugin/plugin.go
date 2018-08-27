@@ -162,7 +162,7 @@ func (p *Plugin) renderValidatorMethods() {
 		p.P(`func validate_`, m.gwPattern, `(r json.RawMessage) (err error) {`)
 		switch m.httpBody {
 		case "":
-			p.P(`if r != nil {`)
+			p.P(`if len(r) != 0 {`)
 			p.P(`return fmt.Errorf("Body is not allowed")`)
 			p.P(`}`)
 			p.P(`return nil`)

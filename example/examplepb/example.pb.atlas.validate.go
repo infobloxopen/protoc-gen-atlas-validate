@@ -45,7 +45,7 @@ func validate_Users_Update_1(r json.RawMessage) (err error) {
 // validate_Users_List_0 is an entrypoint for validating "GET" HTTP request
 // that match *.pb.gw.go/pattern_Users_List_0.
 func validate_Users_List_0(r json.RawMessage) (err error) {
-	if r != nil {
+	if len(r) != 0 {
 		return fmt.Errorf("Body is not allowed")
 	}
 	return nil
@@ -54,7 +54,7 @@ func validate_Users_List_0(r json.RawMessage) (err error) {
 // validate_Users_List_1 is an entrypoint for validating "GET" HTTP request
 // that match *.pb.gw.go/pattern_Users_List_1.
 func validate_Users_List_1(r json.RawMessage) (err error) {
-	if r != nil {
+	if len(r) != 0 {
 		return fmt.Errorf("Body is not allowed")
 	}
 	return nil
@@ -109,7 +109,7 @@ func validate_Groups_Update_0(r json.RawMessage) (err error) {
 // validate_Groups_ValidatedList_0 is an entrypoint for validating "GET" HTTP request
 // that match *.pb.gw.go/pattern_Groups_ValidatedList_0.
 func validate_Groups_ValidatedList_0(r json.RawMessage) (err error) {
-	if r != nil {
+	if len(r) != 0 {
 		return fmt.Errorf("Body is not allowed")
 	}
 	return nil
@@ -118,7 +118,7 @@ func validate_Groups_ValidatedList_0(r json.RawMessage) (err error) {
 // validate_Groups_ValidatedList_1 is an entrypoint for validating "GET" HTTP request
 // that match *.pb.gw.go/pattern_Groups_ValidatedList_1.
 func validate_Groups_ValidatedList_1(r json.RawMessage) (err error) {
-	if r != nil {
+	if len(r) != 0 {
 		return fmt.Errorf("Body is not allowed")
 	}
 	return nil
