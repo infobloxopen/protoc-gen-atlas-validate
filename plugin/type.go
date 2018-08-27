@@ -42,4 +42,3 @@ func (p *Plugin) getGoType(t string) string {
 
 	return ""
 }
-

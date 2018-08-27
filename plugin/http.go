@@ -8,10 +8,9 @@ import (
 )
 
 type httpOpt struct {
-	body string
+	body   string
 	method string
 }
-
 
 func getHttpMethod(r *http_opts.HttpRule) string {
 	switch r.GetPattern().(type) {
@@ -44,12 +43,12 @@ func extractHTTPOpts(m *descriptor.MethodDescriptorProto) []httpOpt {
 
 	if httpRule, ok := ext.(*http_opts.HttpRule); ok {
 		r = append(r, httpOpt{
-			body: httpRule.Body,
+			body:   httpRule.Body,
 			method: getHttpMethod(httpRule),
 		})
 		for _, b := range httpRule.GetAdditionalBindings() {
 			r = append(r, httpOpt{
-				body: b.Body,
+				body:   b.Body,
 				method: getHttpMethod(b),
 			})
 		}
@@ -59,4 +58,3 @@ func extractHTTPOpts(m *descriptor.MethodDescriptorProto) []httpOpt {
 
 	return r
 }
-

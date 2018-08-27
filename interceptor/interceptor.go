@@ -1,14 +1,13 @@
 package interceptor
 
 import (
-        "context"
+	"context"
 	"fmt"
-        "google.golang.org/grpc"
-        "google.golang.org/grpc/codes"
-        "google.golang.org/grpc/status"
-        "google.golang.org/grpc/metadata"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
-
 
 const (
 	ValidationErrorMetaKey = "Atlas-Validation-Error"
@@ -17,17 +16,17 @@ const (
 // ValidationClientInterceptor extracts validation error from metadata
 // and throws InvalidArgumentError if error is not empty.
 func ValidationClientInterceptor() grpc.UnaryClientInterceptor {
-        return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
-                if req == nil {
-                        return
-                }
+	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
+		if req == nil {
+			return
+		}
 
 		if err := GetAtlasValidationError(ctx); err != nil {
 			return status.Error(codes.InvalidArgument, err.Error())
 		}
 
-                return invoker(ctx, method, req, reply, cc, opts...)
-        }
+		return invoker(ctx, method, req, reply, cc, opts...)
+	}
 }
 
 func GetAtlasValidationError(ctx context.Context) error {
@@ -44,4 +43,3 @@ func GetAtlasValidationError(ctx context.Context) error {
 
 	return nil
 }
-
