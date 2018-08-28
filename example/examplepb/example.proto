@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package example;
+
+import "google/api/annotations.proto";
+
+import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
+import "github.com/infobloxopen/protoc-gen-atlas-validate/example/external/external.proto";
+
+option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/examplepb;examplepb";
+
+message User {
+	int32 id = 1;
+	string name = 2;
+	Profile profile = 3;
+	Address address = 4;
+	repeated Group groups = 5;
+
+	message Parent {
+		string name = 1;
+	};
+
+	repeated Parent parents = 6;
+
+	external.ExternalUser external_user = 7;
+}
+
+message Address {
+	string country = 1;
+	string state = 2;
+	string city = 3;
+	string zip = 4;
+}
+
+message Group {
+	int32 id = 1;
+	string name = 2;
+	string notes = 3;
+}
+
+message CreateUserRequest {
+	User payload = 1;
+}
+
+message UpdateUserRequest {
+	User payload = 1;
+}
+
+message EmptyRequest {}
+
+message EmptyResponse {}
+
+service Users {
+	rpc Create(CreateUserRequest) returns (EmptyResponse) {
+		option (google.api.http) = {
+			post: "/users";
+			body: "payload";
+		};
+	}
+
+	rpc Update(UpdateUserRequest) returns (EmptyResponse) {
+		option (google.api.http) = {
+			put: "/users/{payload.id}";
+			body: "payload";
+			additional_bindings: {
+				patch: "/user/{payload.id}";
+				body: "payload";
+			};
+		};
+	}
+
+	rpc List(EmptyRequest) returns (EmptyResponse) {
+		option (google.api.http) = {
+			get: "/users";
+			additional_bindings: {
+				get: "/antother_users";
+			};
+		};
+	}
+
+	rpc UpdateExternalUser(User) returns (EmptyResponse) {
+		option (google.api.http) = {
+			put: "/external_users";
+                        body: "external_user";
+		};
+	}
+
+	rpc UpdateExternalUser2(external.ExternalUser) returns (EmptyResponse) {
+		option (google.api.http) = {
+			put: "/external_users_update";
+			body: "*";
+		};
+	}
+}
+
+message Profile {
+	int32 id = 1;
+	string name = 2;
+	string notes = 3;
+}
+
+message UpdateProfileRequest {
+	Profile payload = 1;
+}
+
+service Profiles {
+	rpc Create(Profile) returns (EmptyResponse) {
+		option (google.api.http) = {
+			post: "/profiles";
+			body: "*";
+		};
+	}
+
+	rpc Update(UpdateProfileRequest) returns (EmptyResponse) {
+		option (atlas_validate.method).allow_unknown_fields = true;
+		option (google.api.http) = {
+			put: "/profiles/{payload.id}";
+			body: "payload";
+		};
+	}
+}
+
+service Groups {
+	option (atlas_validate.service).allow_unknown_fields = true;
+	rpc Create(Group) returns (EmptyResponse) {
+		option (google.api.http) = {
+			post: "/groups";
+			body: "*";
+		};
+	}
+
+	rpc Update(Group) returns (EmptyResponse) {
+		option (google.api.http) = {
+			put: "/groups/{id}";
+			body: "*";
+		};
+	}
+
+	rpc ValidatedList(EmptyRequest) returns (EmptyResponse) {
+		option (atlas_validate.method).allow_unknown_fields = false;
+		option (google.api.http) = {
+			get: "/groups";
+			additional_bindings: {
+				get: "/groups_add";
+			};
+		};
+	}
+}
+
+option (atlas_validate.file).allow_unknown_fields = false;

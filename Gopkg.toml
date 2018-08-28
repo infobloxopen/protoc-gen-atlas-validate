@@ -1,0 +1,15 @@
+[[constraint]]
+  name = "github.com/gogo/protobuf"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "google.golang.org/genproto"
+
+[[constraint]]
+  name = "github.com/gogo/googleapis"
+  version = "1.0.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true
+
