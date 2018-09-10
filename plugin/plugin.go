@@ -170,7 +170,8 @@ func (p *Plugin) renderValidatorMethods() {
 			if m.protoInputType != "" {
 				p.P(`return validate_Object_`, p.getGoType(m.protoInputType), `(r, "", `, m.allowUnknown, `)`)
 			} else {
-				p.P(`if validator, ok := interface{}(`, p.importedType(m.inputType), `{}).(interface{ AtlasValidateJSON(json.RawMessage, string, bool) error }); ok {`)
+				p.P(`obj := `, p.importedType(m.inputType), `{}`)
+				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(json.RawMessage, string, bool) error }); ok {`)
 				p.P(`return validator.AtlasValidateJSON(r, "", `, m.allowUnknown, `)`)
 				p.P(`}`)
 				p.P(`return nil`)
@@ -183,7 +184,8 @@ func (p *Plugin) renderValidatorMethods() {
 					p.P(`return validate_Object_`, gt, `(r, "",`, m.allowUnknown, `)`)
 				}
 			} else {
-				p.P(`if validator, ok := interface{}(`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(json.RawMessage, string, bool) error }); ok {`)
+				p.P(`obj := `, p.importedType(f.GetTypeName()), `{}`)
+				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(json.RawMessage, string, bool) error }); ok {`)
 				p.P(`return validator.AtlasValidateJSON(r, "", `, m.allowUnknown, `)`)
 				p.P(`}`)
 				p.P(`return nil`)
@@ -208,7 +210,8 @@ func (p *Plugin) renderValidatorObjectMethods() {
 func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t string) {
 	p.P(`// validate_Object_`, t, ` function validates a JSON for a given object.`)
 	p.P(`func validate_Object_`, t, `(r json.RawMessage, path string, allowUnknown bool) (err error) {`)
-	p.P(`if hook, ok := interface{}(&`, t, `{}).(interface { AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error) }); ok {`)
+	p.P(`obj := &`, t, `{}`)
+	p.P(`if hook, ok := interface{}(obj).(interface { AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error) }); ok {`)
 	p.P(`if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {`)
 	p.P(`return err`)
 	p.P(`}`)
