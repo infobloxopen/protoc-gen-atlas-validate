@@ -30,6 +30,7 @@ message Address {
 	string state = 2;
 	string city = 3;
 	string zip = 4;
+  map<string,string> tags = 10;
 }
 
 message Group {
