@@ -286,6 +286,7 @@ func validate_Object_Address(r json.RawMessage, path string, allowUnknown bool) 
 		case "state":
 		case "city":
 		case "zip":
+		case "tags":
 		default:
 			if !allowUnknown {
 				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))

@@ -202,6 +202,9 @@ func (p *Plugin) renderValidatorObjectMethods() {
 		otype := p.getGoType(o.GetName())
 		p.renderValidatorObjectMethod(o, otype)
 		for _, no := range o.GetNestedType() {
+			if no.GetOptions().GetMapEntry() {
+				continue
+			}
 			p.renderValidatorObjectMethod(no, otype+"_"+p.getGoType(no.GetName()))
 		}
 	}
@@ -226,6 +229,9 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	for _, f := range o.GetField() {
 		p.P(`case "`, f.GetName(), `":`)
 		gt := p.getGoType(f.GetTypeName())
+		if p.IsMap(f) {
+			continue
+		}
 		if f.IsMessage() && f.IsRepeated() {
 			p.P(`if v[k] == nil {`)
 			p.P(`continue`)
