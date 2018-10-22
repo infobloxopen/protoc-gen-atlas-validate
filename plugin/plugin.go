@@ -228,6 +228,12 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P(`switch k {`)
 	for _, f := range o.GetField() {
 		p.P(`case "`, f.GetName(), `":`)
+		if isFieldReadOnly(f) {
+			p.P("if v[k] != nil {")
+			p.P(fmt.Sprintf("	return fmt.Errorf(\"%s readonly field must be nil\")", *f.Name))
+			p.P("}")
+		}
+
 		gt := p.getGoType(f.GetTypeName())
 		if p.IsMap(f) {
 			continue
@@ -343,4 +349,15 @@ func (p *Plugin) getMessage(t string) *descriptor.DescriptorProto {
 
 	file := p.ObjectNamed(t).File()
 	return file.GetMessage(strings.TrimPrefix(t, "."+file.GetPackage()+"."))
+}
+
+func isFieldReadOnly(field *descriptor.FieldDescriptorProto) (bool) {
+	if fExt, err := proto.GetExtension(field.Options, av_opts.E_Field); err == nil && fExt != nil {
+		favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
+		if favOpt.GetReadOnly() {
+			return true
+		}
+	}
+
+	return false
 }
