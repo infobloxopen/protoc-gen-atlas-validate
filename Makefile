@@ -23,29 +23,29 @@ default: vendor options install
 
 .PHONY: vendor
 vendor:
-	@dep ensure -vendor-only
+	dep ensure -vendor-only
 
 .PHONY: vendor-update
 vendor-update:
-	@dep ensure
+	dep ensure
 
 install:
 	go install
 
 .PHONY: gentool
 gentool:
-	@docker build -f $(GENVALIDATE_DOCKERFILE) -t $(GENVALIDATE_IMAGE):$(IMAGE_VERSION) .
-	@docker image prune -f --filter label=stage=server-intermediate
+	docker build -f $(GENVALIDATE_DOCKERFILE) -t $(GENVALIDATE_IMAGE):$(IMAGE_VERSION) .
+	docker image prune -f --filter label=stage=server-intermediate
 
 gentool-examples: gentool
-	        @$(GENERATOR) \
+	     $(GENERATOR) \
 		-I/go/src/github.com/infobloxopen/protoc-gen-atlas-validate \
                 --go_out="plugins=grpc:$(DOCKERPATH)" \
 		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
                 --atlas-validate_out="$(DOCKERPATH)" \
                         example/examplepb/example.proto
 
-	        @$(GENERATOR) \
+	    $(GENERATOR) \
 		-I/go/src/github.com/infobloxopen/protoc-gen-atlas-validate \
                 --go_out="plugins=grpc:$(DOCKERPATH)" \
 		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
@@ -53,7 +53,7 @@ gentool-examples: gentool
                         example/external/external.proto
 
 gentool-options:
-	@$(GENERATOR) \
+	$(GENERATOR) \
                 --gogo_out="Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:$(DOCKERPATH)" \
                 	$(PROJECT_ROOT)/options/atlas_validate.proto
 
