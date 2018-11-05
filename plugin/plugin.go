@@ -371,7 +371,7 @@ func (p *Plugin) renderDeniedFields(m *descriptor.DescriptorProto, name, httpMet
 
 		if field.IsMessage() {
 			message := p.file.GetMessage(p.trimPkgPrefix(field.GetTypeName()))
-			innerDeclinedFields := p.getDeclinedFields(message, httpMethod)
+			innerDeclinedFields := p.getInnerDeclinedFields(message, httpMethod)
 			if len(innerDeclinedFields) != 0 {
 				deniedFields = innerDeclinedFields
 			}
@@ -394,7 +394,7 @@ func (p *Plugin) renderDeniedFields(m *descriptor.DescriptorProto, name, httpMet
 
 			if field.IsMessage() {
 				message := p.file.GetMessage(p.trimPkgPrefix(field.GetTypeName()))
-				innerDeclinedFields := p.getDeclinedFields(message, httpMethod)
+				innerDeclinedFields := p.getInnerDeclinedFields(message, httpMethod)
 				if len(innerDeclinedFields) != 0 {
 					deniedFields[strings.ToLower(message.GetName())] = innerDeclinedFields
 				}
@@ -409,7 +409,7 @@ func (p *Plugin) renderDeniedFields(m *descriptor.DescriptorProto, name, httpMet
 	return name
 }
 
-func (p *Plugin) getDeclinedFields(m *descriptor.DescriptorProto, httpMethod string) map[string]interface{} {
+func (p *Plugin) getInnerDeclinedFields(m *descriptor.DescriptorProto, httpMethod string) map[string]interface{} {
 	deniedFields := make(map[string]interface{})
 	for _, field := range m.GetField() {
 		if fExt, err := proto.GetExtension(field.Options, av_opts.E_Field); err == nil && fExt != nil {
@@ -423,7 +423,7 @@ func (p *Plugin) getDeclinedFields(m *descriptor.DescriptorProto, httpMethod str
 
 		if field.IsMessage() {
 			message := p.file.GetMessage(p.trimPkgPrefix(field.GetTypeName()))
-			innerDeclinedFields := p.getDeclinedFields(message, httpMethod)
+			innerDeclinedFields := p.getInnerDeclinedFields(message, httpMethod)
 			if len(innerDeclinedFields) != 0 {
 				deniedFields[strings.ToLower(message.GetName())] = innerDeclinedFields
 			}
@@ -446,7 +446,7 @@ func (p *Plugin) getDeclinedFields(m *descriptor.DescriptorProto, httpMethod str
 
 			if field.IsMessage() {
 				message := p.file.GetMessage(p.trimPkgPrefix(field.GetTypeName()))
-				innerDeclinedFields := p.getDeclinedFields(message, httpMethod)
+				innerDeclinedFields := p.getInnerDeclinedFields(message, httpMethod)
 				if len(innerDeclinedFields) != 0 {
 					deniedFields[strings.ToLower(message.GetName())] = innerDeclinedFields
 				}

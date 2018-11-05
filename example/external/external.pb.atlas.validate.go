@@ -22,7 +22,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // validate_Object_ExternalUser function validates a JSON for a given object.
-func validate_Object_ExternalUser(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func validate_Object_ExternalUser(r json.RawMessage, path string, allowUnknown bool, deniedFields map[string]interface{}) (err error) {
 	obj := &ExternalUser{}
 	if hook, ok := interface{}(obj).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -36,6 +36,9 @@ func validate_Object_ExternalUser(r json.RawMessage, path string, allowUnknown b
 		return fmt.Errorf("Invalid value for %q: expected object.", path)
 	}
 	for k, _ := range v {
+		if denied, _ := deniedFields[k].(bool); denied {
+			return fmt.Errorf("Field %s unsupported for this operation ", k)
+		}
 		switch k {
 		case "id":
 		case "name":
@@ -45,7 +48,8 @@ func validate_Object_ExternalUser(r json.RawMessage, path string, allowUnknown b
 			}
 			vv := v[k]
 			vvPath := validate_runtime.JoinPath(path, k)
-			if err = validate_Object_ExternalAddress(vv, vvPath, allowUnknown); err != nil {
+			innerDeniedFields, _ := deniedFields[k].(map[string]interface{})
+			if err = validate_Object_ExternalAddress(vv, vvPath, allowUnknown, innerDeniedFields); err != nil {
 				return err
 			}
 		default:
@@ -58,7 +62,7 @@ func validate_Object_ExternalUser(r json.RawMessage, path string, allowUnknown b
 }
 
 // AtlasValidateJSON function validates a JSON for object ExternalUser.
-func (o *ExternalUser) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func (o *ExternalUser) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool, deniedFields map[string]interface{}) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
 	}); ok {
@@ -66,11 +70,11 @@ func (o *ExternalUser) AtlasValidateJSON(r json.RawMessage, path string, allowUn
 			return err
 		}
 	}
-	return validate_Object_ExternalUser(r, path, allowUnknown)
+	return validate_Object_ExternalUser(r, path, allowUnknown, deniedFields)
 }
 
 // validate_Object_ExternalUser_Parent function validates a JSON for a given object.
-func validate_Object_ExternalUser_Parent(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func validate_Object_ExternalUser_Parent(r json.RawMessage, path string, allowUnknown bool, deniedFields map[string]interface{}) (err error) {
 	obj := &ExternalUser_Parent{}
 	if hook, ok := interface{}(obj).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -84,6 +88,9 @@ func validate_Object_ExternalUser_Parent(r json.RawMessage, path string, allowUn
 		return fmt.Errorf("Invalid value for %q: expected object.", path)
 	}
 	for k, _ := range v {
+		if denied, _ := deniedFields[k].(bool); denied {
+			return fmt.Errorf("Field %s unsupported for this operation ", k)
+		}
 		switch k {
 		case "name":
 		default:
@@ -96,7 +103,7 @@ func validate_Object_ExternalUser_Parent(r json.RawMessage, path string, allowUn
 }
 
 // AtlasValidateJSON function validates a JSON for object ExternalUser_Parent.
-func (o *ExternalUser_Parent) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func (o *ExternalUser_Parent) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool, deniedFields map[string]interface{}) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
 	}); ok {
@@ -104,11 +111,11 @@ func (o *ExternalUser_Parent) AtlasValidateJSON(r json.RawMessage, path string, 
 			return err
 		}
 	}
-	return validate_Object_ExternalUser_Parent(r, path, allowUnknown)
+	return validate_Object_ExternalUser_Parent(r, path, allowUnknown, deniedFields)
 }
 
 // validate_Object_ExternalAddress function validates a JSON for a given object.
-func validate_Object_ExternalAddress(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func validate_Object_ExternalAddress(r json.RawMessage, path string, allowUnknown bool, deniedFields map[string]interface{}) (err error) {
 	obj := &ExternalAddress{}
 	if hook, ok := interface{}(obj).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -122,6 +129,9 @@ func validate_Object_ExternalAddress(r json.RawMessage, path string, allowUnknow
 		return fmt.Errorf("Invalid value for %q: expected object.", path)
 	}
 	for k, _ := range v {
+		if denied, _ := deniedFields[k].(bool); denied {
+			return fmt.Errorf("Field %s unsupported for this operation ", k)
+		}
 		switch k {
 		case "country":
 		case "state":
@@ -137,7 +147,7 @@ func validate_Object_ExternalAddress(r json.RawMessage, path string, allowUnknow
 }
 
 // AtlasValidateJSON function validates a JSON for object ExternalAddress.
-func (o *ExternalAddress) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func (o *ExternalAddress) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool, deniedFields map[string]interface{}) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
 	}); ok {
@@ -145,7 +155,7 @@ func (o *ExternalAddress) AtlasValidateJSON(r json.RawMessage, path string, allo
 			return err
 		}
 	}
-	return validate_Object_ExternalAddress(r, path, allowUnknown)
+	return validate_Object_ExternalAddress(r, path, allowUnknown, deniedFields)
 }
 
 var validate_Patterns = []struct {

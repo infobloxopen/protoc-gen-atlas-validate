@@ -27,7 +27,7 @@ message User {
 
 message Address {
 	string country = 1;
-	string state = 2;
+	string state = 2 [(atlas_validate.field).permission = CO];
 	string city = 3;
 	string zip = 4;
 	map<string,string> tags = 10;
@@ -82,7 +82,7 @@ service Users {
 	rpc UpdateExternalUser(User) returns (EmptyResponse) {
 		option (google.api.http) = {
 			put: "/external_users";
-                        body: "external_user";
+			body: "external_user";
 		};
 	}
 
@@ -95,8 +95,8 @@ service Users {
 }
 
 message Profile {
-	int32 id = 1;
-	string name = 2;
+	int32  id = 1;
+	string name = 2 [(atlas_validate.field).permission =  RO];
 	string notes = 3;
 }
 
