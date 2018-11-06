@@ -38,11 +38,11 @@ var Users_Update_0 = map[string]interface{}{
 	},
 }
 var Users_Update_1 = map[string]interface{}{
-	"profile": map[string]interface{}{
-		"name": true,
-	},
 	"address": map[string]interface{}{
 		"state": true,
+	},
+	"profile": map[string]interface{}{
+		"name": true,
 	},
 }
 var Users_List_0 = map[string]interface{}{}
