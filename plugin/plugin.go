@@ -98,7 +98,6 @@ type methodDescriptor struct {
 	protoInputType       string
 	allowUnknown         bool
 	inputType            string
-	declinedFieldsMask   string
 }
 
 // gatherMethods function walks through services and methods and extracts
@@ -108,16 +107,15 @@ func (p *Plugin) gatherMethods() {
 		for _, method := range svc.GetMethod() {
 			for i, opt := range extractHTTPOpts(method) {
 				p.methods = append(p.methods, methodDescriptor{
-					svc:                svc.GetName(),
-					method:             method.GetName(),
-					idx:                i,
-					httpBody:           opt.body,
-					httpMethod:         opt.method,
-					gwPattern:          fmt.Sprintf("%s_%s_%d", svc.GetName(), method.GetName(), i),
-					protoInputType:     p.getProtoType(method.GetInputType()),
-					inputType:          method.GetInputType(),
-					allowUnknown:       p.getAllowUnknown(p.file.Options, svc.Options, method.Options),
-					declinedFieldsMask: p.renderDeniedFields(p.file.GetMessage(p.trimPkgPrefix(*method.InputType)), fmt.Sprintf("%s_%s_%d", svc.GetName(), method.GetName(), i), opt.method),
+					svc:            svc.GetName(),
+					method:         method.GetName(),
+					idx:            i,
+					httpBody:       opt.body,
+					httpMethod:     opt.method,
+					gwPattern:      fmt.Sprintf("%s_%s_%d", svc.GetName(), method.GetName(), i),
+					protoInputType: p.getProtoType(method.GetInputType()),
+					inputType:      method.GetInputType(),
+					allowUnknown:   p.getAllowUnknown(p.file.Options, svc.Options, method.Options),
 				})
 			}
 		}
@@ -138,7 +136,7 @@ func (p *Plugin) renderMethodDescriptors() {
 	p.P(`var validate_Patterns = []struct{`)
 	p.P(`pattern runtime.Pattern`)
 	p.P(`httpMethod string`)
-	p.P(`validator func(json.RawMessage) error`)
+	p.P(`validator func(context.Context, json.RawMessage) error`)
 	p.P(`// Included for introspection purpose.`)
 	p.P(`allowUnknown bool`)
 	p.P(`} {`)
@@ -161,7 +159,7 @@ func (p *Plugin) renderValidatorMethods() {
 	for _, m := range p.methods {
 		p.P(`// validate_`, m.gwPattern, ` is an entrypoint for validating "`, m.httpMethod, `" HTTP request `)
 		p.P(`// that match *.pb.gw.go/pattern_`, m.gwPattern, `.`)
-		p.P(`func validate_`, m.gwPattern, `(r json.RawMessage) (err error) {`)
+		p.P(`func validate_`, m.gwPattern, `(ctx context.Context, r json.RawMessage) (err error) {`)
 		switch m.httpBody {
 		case "":
 			p.P(`if len(r) != 0 {`)
@@ -170,14 +168,11 @@ func (p *Plugin) renderValidatorMethods() {
 			p.P(`return nil`)
 		case "*":
 			if m.protoInputType != "" {
-				p.P("declinedFieldsMask := ", m.declinedFieldsMask)
-				p.P(`return validate_Object_`, p.getGoType(m.protoInputType), `(r, "", `, m.allowUnknown, `,declinedFieldsMask)`)
+				p.P(`return validate_Object_`, p.getGoType(m.protoInputType), `(ctx, r, "", `, m.allowUnknown, `)`)
 			} else {
 				p.P(`obj := `, p.importedType(m.inputType), `{}`)
-				p.P("declinedFieldsMask := ", m.declinedFieldsMask)
-
-				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(json.RawMessage, string, bool,map[string]interface{}) error }); ok {`)
-				p.P(`return validator.AtlasValidateJSON(r, "", `, m.allowUnknown, `,declinedFieldsMask)`)
+				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(context.Context, json.RawMessage, string, bool) error }); ok {`)
+				p.P(`return validator.AtlasValidateJSON(ctx, r, "", `, m.allowUnknown, `)`)
 				p.P(`}`)
 				p.P(`return nil`)
 			}
@@ -186,14 +181,12 @@ func (p *Plugin) renderValidatorMethods() {
 			f := msg.GetFieldDescriptor(m.httpBody)
 			if p.getProtoType(f.GetTypeName()) != "" {
 				if gt := p.getGoType(f.GetTypeName()); gt != "" {
-					p.P("declinedFieldsMask := ", m.declinedFieldsMask)
-					p.P(`return validate_Object_`, gt, `(r, "",`, m.allowUnknown, `, declinedFieldsMask)`)
+					p.P(`return validate_Object_`, gt, `(ctx, r, "",`, m.allowUnknown, `)`)
 				}
 			} else {
 				p.P(`obj := `, p.importedType(f.GetTypeName()), `{}`)
-				p.P("declinedFieldsMask := ", m.declinedFieldsMask)
-				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(json.RawMessage, string, bool, map[string]interface{}) error }); ok {`)
-				p.P(`return validator.AtlasValidateJSON(r, "", `, m.allowUnknown, `, declinedFieldsMask)`)
+				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(context.Context, json.RawMessage, string, bool) error }); ok {`)
+				p.P(`return validator.AtlasValidateJSON(ctx, r, "", `, m.allowUnknown, `)`)
 				p.P(`}`)
 				p.P(`return nil`)
 			}
@@ -219,7 +212,7 @@ func (p *Plugin) renderValidatorObjectMethods() {
 
 func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t string) {
 	p.P(`// validate_Object_`, t, ` function validates a JSON for a given object.`)
-	p.P(`func validate_Object_`, t, `(r json.RawMessage, path string, allowUnknown bool, deniedFields map[string]interface{}) (err error) {`)
+	p.P(`func validate_Object_`, t, `(ctx context.Context,r json.RawMessage, path string, allowUnknown bool) (err error) {`)
 	p.P(`obj := &`, t, `{}`)
 	p.P(`if hook, ok := interface{}(obj).(interface { AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error) }); ok {`)
 	p.P(`if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {`)
@@ -232,9 +225,6 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P(`}`)
 
 	p.P(`for k, _ := range v {`)
-	p.P("if denied, _ := deniedFields[k].(bool); denied {")
-	p.P("return fmt.Errorf(\"Field %s unsupported for this operation \", k)")
-	p.P("}")
 
 	p.P(`switch k {`)
 	for _, f := range o.GetField() {
@@ -243,8 +233,30 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 		if p.IsMap(f) {
 			continue
 		}
+		if fExt, err := proto.GetExtension(f.Options, av_opts.E_Field); err == nil && fExt != nil {
+			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
+			if favOpt.ReadOnly {
+				p.P(`method, _ := ctx.Value("http-method").(string)`)
+				p.P(`if method != "GET" {`)
+				p.P(`return fmt.Errorf("Field %s has readonly access", k)`)
+				p.P(`}`)
+			} else if methods := GetDenyOperations(favOpt.GetDeny()); len(methods) != 0 {
+				p.P(`method, _ := ctx.Value("http-method").(string)`)
+				p.WriteString("if v[k] != nil && (")
+				for ind, m := range methods {
+					p.WriteString(fmt.Sprintf(`method == "%s"`, m))
+					if ind == len(methods)-1 {
+						p.WriteString(") {")
+						break
+					}
+					p.WriteString(" || ")
+				}
+				p.P(`return fmt.Errorf("Field %s has unsupported for method %s", k, method)`)
+				p.P("}")
+			}
+		}
+
 		if f.IsMessage() && f.IsRepeated() {
-			p.P(`denied, _ := deniedFields[k].(map[string]interface{})`)
 			p.P(`if v[k] == nil {`)
 			p.P(`continue`)
 			p.P(`}`)
@@ -254,7 +266,7 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 			p.P(`return fmt.Errorf("Invalid value for %q: expected array.", vArrPath)`)
 			p.P(`}`)
 			if gt == "" {
-				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(json.RawMessage, string, bool, map[string]interface{}) error })`)
+				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(context.Context,json.RawMessage, string, bool) error })`)
 				p.P(`if !ok {`)
 				p.P(`continue`)
 				p.P(`}`)
@@ -262,11 +274,11 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 			p.P(`for i, vv := range vArr {`)
 			p.P(`vvPath := fmt.Sprintf("%s.[%d]", vArrPath, i)`)
 			if gt == "" {
-				p.P(`if err = validator.AtlasValidateJSON(vv, vvPath, allowUnknown, map[string]interface{}); err != nil {`)
+				p.P(`if err = validator.AtlasValidateJSON(ctx, vv, vvPath, allowUnknown); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			} else {
-				p.P(`if err = validate_Object_`, gt, `(vv, vvPath, allowUnknown, denied); err != nil {`)
+				p.P(`if err = validate_Object_`, gt, `(ctx, vv, vvPath, allowUnknown); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			}
@@ -277,17 +289,16 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 			p.P(`}`)
 			p.P(`vv := v[k]`)
 			p.P(`vvPath := validate_runtime.JoinPath(path, k)`)
-			p.P("innerDeniedFields, _ := deniedFields[k].(map[string]interface{})")
 			if gt == "" {
-				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(json.RawMessage, string, bool, map[string]interface{}) error })`)
+				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(context.Context, json.RawMessage, string, bool) error })`)
 				p.P(`if !ok {`)
 				p.P(`continue`)
 				p.P(`}`)
-				p.P(`if err = validator.AtlasValidateJSON(vv, vvPath, allowUnknown, innerDeniedFields); err != nil {`)
+				p.P(`if err = validator.AtlasValidateJSON(ctx, vv, vvPath, allowUnknown); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			} else {
-				p.P(`if err = validate_Object_`, gt, `(vv, vvPath, allowUnknown, innerDeniedFields); err != nil {`)
+				p.P(`if err = validate_Object_`, gt, `(ctx, vv, vvPath, allowUnknown); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			}
@@ -304,13 +315,13 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P()
 
 	p.P(`// AtlasValidateJSON function validates a JSON for object `, t, `.`)
-	p.P(`func (o *`, t, `) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool, deniedFields map[string]interface{}) (err error) {`)
+	p.P(`func (o *`, t, `) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path string, allowUnknown bool) (err error) {`)
 	p.P(`if hook, ok := interface{}(o).(interface { AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error) }); ok {`)
 	p.P(`if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {`)
 	p.P(`return err`)
 	p.P(`}`)
 	p.P(`}`)
-	p.P(`return validate_Object_`, t, `(r, path, allowUnknown, deniedFields)`)
+	p.P(`return validate_Object_`, t, `(ctx, r, path, allowUnknown)`)
 	p.P(`}`)
 	p.P()
 }
@@ -330,7 +341,8 @@ func (p *Plugin) renderAnnotator() {
 	p.P(`return md`)
 	p.P(`}`)
 	p.P(`r.Body = ioutil.NopCloser(bytes.NewReader(b))`)
-	p.P(`if err = v.validator(b); err != nil {`)
+	p.P(`ctx := context.WithValue(context.Background(), "http-method", r.Method)`)
+	p.P(`if err = v.validator(ctx, b); err != nil {`)
 	p.P(`md.Set("Atlas-Validation-Error", err.Error())`)
 	p.P(`}`)
 	p.P(`break`)
@@ -358,135 +370,13 @@ func (p *Plugin) getMessage(t string) *descriptor.DescriptorProto {
 	return file.GetMessage(strings.TrimPrefix(t, "."+file.GetPackage()+"."))
 }
 
-func (p *Plugin) renderDeniedFields(m *descriptor.DescriptorProto, name, httpMethod string) string {
-	deniedFields := make(map[string]interface{}, 0)
-	for _, field := range m.GetField() {
-		if fExt, err := proto.GetExtension(field.Options, av_opts.E_Field); err == nil && fExt != nil {
-			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
-			methods := GetDeclinedOperations(favOpt.GetPermission())
-			if StringInSlice(methods, httpMethod) {
-				deniedFields[*field.Name] = true
-			}
-		}
-
-		if field.IsMessage() {
-			message := p.file.GetMessage(p.trimPkgPrefix(field.GetTypeName()))
-			innerDeclinedFields := p.getInnerDeclinedFields(message, httpMethod)
-			if len(innerDeclinedFields) != 0 {
-				deniedFields = innerDeclinedFields
-			}
-		}
-	}
-
-	for _, no := range m.GetNestedType() {
-		if no.GetOptions().GetMapEntry() {
-			continue
-		}
-
-		for _, field := range no.GetField() {
-			if fExt, err := proto.GetExtension(field.Options, av_opts.E_Field); err == nil && fExt != nil {
-				favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
-				declinedMethods := GetDeclinedOperations(favOpt.GetPermission())
-				if StringInSlice(declinedMethods, httpMethod) {
-					deniedFields[*field.Name] = true
-				}
-			}
-
-			if field.IsMessage() {
-				message := p.file.GetMessage(p.trimPkgPrefix(field.GetTypeName()))
-				innerDeclinedFields := p.getInnerDeclinedFields(message, httpMethod)
-				if len(innerDeclinedFields) != 0 {
-					deniedFields[strings.ToLower(message.GetName())] = innerDeclinedFields
-				}
-			}
-		}
-	}
-
-	p.P(fmt.Sprintf(`var %s = map[string]interface{}{`, name))
-	p.recursiveRenderFields(deniedFields)
-	p.P(`}`)
-
-	return name
-}
-
-func (p *Plugin) getInnerDeclinedFields(m *descriptor.DescriptorProto, httpMethod string) map[string]interface{} {
-	deniedFields := make(map[string]interface{})
-	for _, field := range m.GetField() {
-		if fExt, err := proto.GetExtension(field.Options, av_opts.E_Field); err == nil && fExt != nil {
-			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
-			declinedMethods := GetDeclinedOperations(favOpt.GetPermission())
-			if StringInSlice(declinedMethods, httpMethod) {
-				deniedFields[*field.Name] = true
-			}
-
-		}
-
-		if field.IsMessage() {
-			message := p.file.GetMessage(p.trimPkgPrefix(field.GetTypeName()))
-			innerDeclinedFields := p.getInnerDeclinedFields(message, httpMethod)
-			if len(innerDeclinedFields) != 0 {
-				deniedFields[strings.ToLower(message.GetName())] = innerDeclinedFields
-			}
-		}
-	}
-
-	for _, no := range m.GetNestedType() {
-		if no.GetOptions().GetMapEntry() {
-			continue
-		}
-
-		for _, field := range no.GetField() {
-			if fExt, err := proto.GetExtension(field.Options, av_opts.E_Field); err == nil && fExt != nil {
-				favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
-				declinedMethods := GetDeclinedOperations(favOpt.GetPermission())
-				if StringInSlice(declinedMethods, httpMethod) {
-					deniedFields[*field.Name] = true
-				}
-			}
-
-			if field.IsMessage() {
-				message := p.file.GetMessage(p.trimPkgPrefix(field.GetTypeName()))
-				innerDeclinedFields := p.getInnerDeclinedFields(message, httpMethod)
-				if len(innerDeclinedFields) != 0 {
-					deniedFields[strings.ToLower(message.GetName())] = innerDeclinedFields
-				}
-			}
-		}
-	}
-
-	return deniedFields
-}
-
-func (p *Plugin) recursiveRenderFields(declinedFields map[string]interface{}) {
-	for fieldName, val := range declinedFields {
-		switch val.(type) {
-		case bool:
-			p.P(fmt.Sprintf(`"%s": %t, `, fieldName, val))
-		case map[string]interface{}:
-			p.P(fmt.Sprintf(`"%s": map[string]interface{}{`, fieldName))
-			p.recursiveRenderFields(val.(map[string]interface{}))
-			p.P(`},`)
-		}
-	}
-}
-
-func GetDeclinedOperations(permissions av_opts.AtlasValidateFieldOption_Permissions) []string {
+func GetDenyOperations(permissions av_opts.AtlasValidateFieldOption_Operation) []string {
 	switch permissions {
-	case av_opts.AtlasValidateFieldOption_RO:
-		return []string{"POST", "PUT", "PATCH"}
-	case av_opts.AtlasValidateFieldOption_CO:
+	case av_opts.AtlasValidateFieldOption_create:
+		return []string{"POST"}
+	case av_opts.AtlasValidateFieldOption_update:
 		return []string{"PUT", "PATCH"}
 	}
 
 	return nil
-}
-
-func StringInSlice(slice []string, str string) bool {
-	for _, v := range slice {
-		if v == str {
-			return true
-		}
-	}
-
-	return false
 }

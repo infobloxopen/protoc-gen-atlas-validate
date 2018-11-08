@@ -35,13 +35,16 @@ extend google.protobuf.FieldOptions {
 }
 
 message AtlasValidateFieldOption {
-  enum Permissions {
-    //Field allow only read access
-    RO = 0;
-
+  enum Operation {
     //Field allow only on create operation
-    CO = 1;
+    create = 0;
+
+    //Field allow only on update operation
+    update = 1;
   }
 
-  Permissions permission = 1;
+
+  Operation deny = 1;
+  bool read_only = 2;
+
 }
