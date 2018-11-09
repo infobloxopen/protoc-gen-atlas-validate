@@ -288,9 +288,7 @@ func validate_Object_Address(ctx context.Context, r json.RawMessage, path string
 		switch k {
 		case "country":
 		case "state":
-			if validate_runtime.HTTPMethodFromContext(ctx) != "GET" {
-				return fmt.Errorf("Field %s has readonly access", k)
-			}
+			return fmt.Errorf("Field %s has readonly access", k)
 		case "city":
 		case "zip":
 		case "tags":

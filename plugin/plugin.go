@@ -236,9 +236,7 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 		if fExt, err := proto.GetExtension(f.Options, av_opts.E_Field); err == nil && fExt != nil {
 			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
 			if favOpt.ReadOnly {
-				p.P(`if validate_runtime.HTTPMethodFromContext(ctx) != "GET" {`)
 				p.P(`return fmt.Errorf("Field %s has readonly access", k)`)
-				p.P(`}`)
 			} else if  favOpt.GetDeny() == av_opts.AtlasValidateFieldOption_create  {
 				p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
 				p.P(fmt.Sprintf(`if "POST" == method {`, ))
