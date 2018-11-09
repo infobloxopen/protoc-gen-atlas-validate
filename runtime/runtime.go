@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"context"
 	"strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -28,4 +29,9 @@ func JoinPath(path string, element string) string {
 	}
 
 	return path + "." + element
+}
+
+func HTTPMethodFromContext(ctx context.Context) (method string) {
+	method, _ = ctx.Value("http-method").(string)
+	return method
 }

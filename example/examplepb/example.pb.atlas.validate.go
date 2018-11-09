@@ -143,9 +143,9 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string, a
 	for k, _ := range v {
 		switch k {
 		case "id":
-			method, _ := ctx.Value("http-method").(string)
-			if v[k] != nil && (method == "POST") {
-				return fmt.Errorf("Field %s has unsupported for method %s", k, method)
+			method := validate_runtime.HTTPMethodFromContext(ctx)
+			if "POST" == method {
+				return fmt.Errorf("Field %s unsupported for create method", k)
 			}
 		case "name":
 		case "profile":
@@ -288,8 +288,7 @@ func validate_Object_Address(ctx context.Context, r json.RawMessage, path string
 		switch k {
 		case "country":
 		case "state":
-			method, _ := ctx.Value("http-method").(string)
-			if method != "GET" {
+			if validate_runtime.HTTPMethodFromContext(ctx) != "GET" {
 				return fmt.Errorf("Field %s has readonly access", k)
 			}
 		case "city":
@@ -540,9 +539,9 @@ func validate_Object_Profile(ctx context.Context, r json.RawMessage, path string
 		switch k {
 		case "id":
 		case "name":
-			method, _ := ctx.Value("http-method").(string)
-			if v[k] != nil && (method == "PUT" || method == "PATCH") {
-				return fmt.Errorf("Field %s has unsupported for method %s", k, method)
+			method := validate_runtime.HTTPMethodFromContext(ctx)
+			if "PUT" == method || "PATCH" == method {
+				return fmt.Errorf("Field %s unsupported for update method", k)
 			}
 		case "notes":
 		default:
