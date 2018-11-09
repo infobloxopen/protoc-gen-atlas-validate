@@ -53,9 +53,9 @@ option (atlas_validate.file).allow_unknown_fields = false;
 Field option:
 ```
 message User {
-   int64  id    = 1 [(atlas_validate.field).permission =  RO];
-   string name  = 2 [(atlas_validate.field).permission =  CO];
-   string email = 3;
+   int64  id    = 1 [(atlas_validate.field).deny =  create];
+   string name  = 2 [(atlas_validate.field).deny =  update];
+   string email = 3 [(atlas_validate.field).read_only = true];
 }
 ```
 ### Generation
