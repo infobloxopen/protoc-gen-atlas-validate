@@ -113,7 +113,7 @@ func TestAllowUnknown(t *testing.T) {
 		{
 			input:            json.RawMessage([]byte(`{"id": 1, "notes": "some notes", "unknown_field": "unknown_value"}`)),
 			validateFunction: validate_Profiles_Update_0,
-			context:          context.WithValue(context.Background(), "http-method", "PUT"),
+			context:          context.WithValue(context.WithValue(context.Background(), "http-method", "PUT"), "allow-unknown", true),
 			negative:         false,
 		},
 		{
@@ -125,13 +125,13 @@ func TestAllowUnknown(t *testing.T) {
 		{
 			input:            json.RawMessage([]byte(`{"id": 1, "name": "first", "notes": "some notes", "unknown_field": "unknown_value"}`)),
 			validateFunction: validate_Groups_Create_0,
-			context:          context.WithValue(context.Background(), "http-method", "POST"),
+			context:          context.WithValue(context.WithValue(context.Background(), "http-method", "PUT"), "allow-unknown", true),
 			negative:         false,
 		},
 		{
 			input:            json.RawMessage([]byte(`{"id": 1, "name": "first", "notes": "some notes", "unknown_field": "unknown_value"}`)),
 			validateFunction: validate_Groups_Update_0,
-			context:          context.WithValue(context.Background(), "http-method", "PUT"),
+			context:          context.WithValue(context.WithValue(context.Background(), "http-method", "PUT"), "allow-unknown", true),
 			negative:         false,
 		},
 		{
