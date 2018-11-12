@@ -10,7 +10,7 @@ import "github.com/infobloxopen/protoc-gen-atlas-validate/example/external/exter
 option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/examplepb;examplepb";
 
 message User {
-	int32 id = 1;
+	int32 id = 1 [(atlas_validate.field).deny = create];
 	string name = 2;
 	Profile profile = 3;
 	Address address = 4;
@@ -27,7 +27,7 @@ message User {
 
 message Address {
 	string country = 1;
-	string state = 2;
+	string state = 2 [(atlas_validate.field).read_only = true];
 	string city = 3;
 	string zip = 4;
 	map<string,string> tags = 10;
@@ -82,7 +82,7 @@ service Users {
 	rpc UpdateExternalUser(User) returns (EmptyResponse) {
 		option (google.api.http) = {
 			put: "/external_users";
-                        body: "external_user";
+			body: "external_user";
 		};
 	}
 
@@ -95,8 +95,8 @@ service Users {
 }
 
 message Profile {
-	int32 id = 1;
-	string name = 2;
+	int32  id = 1;
+	string name = 2 [(atlas_validate.field).deny = update];
 	string notes = 3;
 }
 

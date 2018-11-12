@@ -22,7 +22,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // validate_Object_ExternalUser function validates a JSON for a given object.
-func validate_Object_ExternalUser(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func validate_Object_ExternalUser(ctx context.Context, r json.RawMessage, path string, allowUnknown bool) (err error) {
 	obj := &ExternalUser{}
 	if hook, ok := interface{}(obj).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -45,7 +45,7 @@ func validate_Object_ExternalUser(r json.RawMessage, path string, allowUnknown b
 			}
 			vv := v[k]
 			vvPath := validate_runtime.JoinPath(path, k)
-			if err = validate_Object_ExternalAddress(vv, vvPath, allowUnknown); err != nil {
+			if err = validate_Object_ExternalAddress(ctx, vv, vvPath, allowUnknown); err != nil {
 				return err
 			}
 		default:
@@ -58,7 +58,7 @@ func validate_Object_ExternalUser(r json.RawMessage, path string, allowUnknown b
 }
 
 // AtlasValidateJSON function validates a JSON for object ExternalUser.
-func (o *ExternalUser) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func (o *ExternalUser) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
 	}); ok {
@@ -66,11 +66,11 @@ func (o *ExternalUser) AtlasValidateJSON(r json.RawMessage, path string, allowUn
 			return err
 		}
 	}
-	return validate_Object_ExternalUser(r, path, allowUnknown)
+	return validate_Object_ExternalUser(ctx, r, path, allowUnknown)
 }
 
 // validate_Object_ExternalUser_Parent function validates a JSON for a given object.
-func validate_Object_ExternalUser_Parent(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func validate_Object_ExternalUser_Parent(ctx context.Context, r json.RawMessage, path string, allowUnknown bool) (err error) {
 	obj := &ExternalUser_Parent{}
 	if hook, ok := interface{}(obj).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -96,7 +96,7 @@ func validate_Object_ExternalUser_Parent(r json.RawMessage, path string, allowUn
 }
 
 // AtlasValidateJSON function validates a JSON for object ExternalUser_Parent.
-func (o *ExternalUser_Parent) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func (o *ExternalUser_Parent) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
 	}); ok {
@@ -104,11 +104,11 @@ func (o *ExternalUser_Parent) AtlasValidateJSON(r json.RawMessage, path string, 
 			return err
 		}
 	}
-	return validate_Object_ExternalUser_Parent(r, path, allowUnknown)
+	return validate_Object_ExternalUser_Parent(ctx, r, path, allowUnknown)
 }
 
 // validate_Object_ExternalAddress function validates a JSON for a given object.
-func validate_Object_ExternalAddress(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func validate_Object_ExternalAddress(ctx context.Context, r json.RawMessage, path string, allowUnknown bool) (err error) {
 	obj := &ExternalAddress{}
 	if hook, ok := interface{}(obj).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
@@ -137,7 +137,7 @@ func validate_Object_ExternalAddress(r json.RawMessage, path string, allowUnknow
 }
 
 // AtlasValidateJSON function validates a JSON for object ExternalAddress.
-func (o *ExternalAddress) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {
+func (o *ExternalAddress) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path string, allowUnknown bool) (err error) {
 	if hook, ok := interface{}(o).(interface {
 		AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error)
 	}); ok {
@@ -145,13 +145,13 @@ func (o *ExternalAddress) AtlasValidateJSON(r json.RawMessage, path string, allo
 			return err
 		}
 	}
-	return validate_Object_ExternalAddress(r, path, allowUnknown)
+	return validate_Object_ExternalAddress(ctx, r, path, allowUnknown)
 }
 
 var validate_Patterns = []struct {
 	pattern    runtime.Pattern
 	httpMethod string
-	validator  func(json.RawMessage) error
+	validator  func(context.Context, json.RawMessage) error
 	// Included for introspection purpose.
 	allowUnknown bool
 }{}
@@ -169,7 +169,8 @@ func AtlasValidateAnnotator(ctx context.Context, r *http.Request) metadata.MD {
 				return md
 			}
 			r.Body = ioutil.NopCloser(bytes.NewReader(b))
-			if err = v.validator(b); err != nil {
+			ctx := context.WithValue(context.Background(), "http-method", r.Method)
+			if err = v.validator(ctx, b); err != nil {
 				md.Set("Atlas-Validation-Error", err.Error())
 			}
 			break

@@ -29,3 +29,22 @@ extend google.protobuf.ServiceOptions {
 message AtlasValidateServiceOption {
   bool allow_unknown_fields = 1;
 }
+
+extend google.protobuf.FieldOptions {
+  AtlasValidateFieldOption field = 52219;
+}
+
+message AtlasValidateFieldOption {
+  enum Operation {
+    //Field allow only on create operation
+    create = 0;
+
+    //Field allow only on update operation
+    update = 1;
+  }
+
+
+  Operation deny = 1;
+  bool read_only = 2;
+
+}

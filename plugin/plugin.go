@@ -136,7 +136,7 @@ func (p *Plugin) renderMethodDescriptors() {
 	p.P(`var validate_Patterns = []struct{`)
 	p.P(`pattern runtime.Pattern`)
 	p.P(`httpMethod string`)
-	p.P(`validator func(json.RawMessage) error`)
+	p.P(`validator func(context.Context, json.RawMessage) error`)
 	p.P(`// Included for introspection purpose.`)
 	p.P(`allowUnknown bool`)
 	p.P(`} {`)
@@ -159,7 +159,7 @@ func (p *Plugin) renderValidatorMethods() {
 	for _, m := range p.methods {
 		p.P(`// validate_`, m.gwPattern, ` is an entrypoint for validating "`, m.httpMethod, `" HTTP request `)
 		p.P(`// that match *.pb.gw.go/pattern_`, m.gwPattern, `.`)
-		p.P(`func validate_`, m.gwPattern, `(r json.RawMessage) (err error) {`)
+		p.P(`func validate_`, m.gwPattern, `(ctx context.Context, r json.RawMessage) (err error) {`)
 		switch m.httpBody {
 		case "":
 			p.P(`if len(r) != 0 {`)
@@ -168,11 +168,11 @@ func (p *Plugin) renderValidatorMethods() {
 			p.P(`return nil`)
 		case "*":
 			if m.protoInputType != "" {
-				p.P(`return validate_Object_`, p.getGoType(m.protoInputType), `(r, "", `, m.allowUnknown, `)`)
+				p.P(`return validate_Object_`, p.getGoType(m.protoInputType), `(ctx, r, "", `, m.allowUnknown, `)`)
 			} else {
 				p.P(`obj := `, p.importedType(m.inputType), `{}`)
-				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(json.RawMessage, string, bool) error }); ok {`)
-				p.P(`return validator.AtlasValidateJSON(r, "", `, m.allowUnknown, `)`)
+				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(context.Context, json.RawMessage, string, bool) error }); ok {`)
+				p.P(`return validator.AtlasValidateJSON(ctx, r, "", `, m.allowUnknown, `)`)
 				p.P(`}`)
 				p.P(`return nil`)
 			}
@@ -181,12 +181,12 @@ func (p *Plugin) renderValidatorMethods() {
 			f := msg.GetFieldDescriptor(m.httpBody)
 			if p.getProtoType(f.GetTypeName()) != "" {
 				if gt := p.getGoType(f.GetTypeName()); gt != "" {
-					p.P(`return validate_Object_`, gt, `(r, "",`, m.allowUnknown, `)`)
+					p.P(`return validate_Object_`, gt, `(ctx, r, "",`, m.allowUnknown, `)`)
 				}
 			} else {
 				p.P(`obj := `, p.importedType(f.GetTypeName()), `{}`)
-				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(json.RawMessage, string, bool) error }); ok {`)
-				p.P(`return validator.AtlasValidateJSON(r, "", `, m.allowUnknown, `)`)
+				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(context.Context, json.RawMessage, string, bool) error }); ok {`)
+				p.P(`return validator.AtlasValidateJSON(ctx, r, "", `, m.allowUnknown, `)`)
 				p.P(`}`)
 				p.P(`return nil`)
 			}
@@ -212,7 +212,7 @@ func (p *Plugin) renderValidatorObjectMethods() {
 
 func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t string) {
 	p.P(`// validate_Object_`, t, ` function validates a JSON for a given object.`)
-	p.P(`func validate_Object_`, t, `(r json.RawMessage, path string, allowUnknown bool) (err error) {`)
+	p.P(`func validate_Object_`, t, `(ctx context.Context,r json.RawMessage, path string, allowUnknown bool) (err error) {`)
 	p.P(`obj := &`, t, `{}`)
 	p.P(`if hook, ok := interface{}(obj).(interface { AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error) }); ok {`)
 	p.P(`if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {`)
@@ -225,6 +225,7 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P(`}`)
 
 	p.P(`for k, _ := range v {`)
+
 	p.P(`switch k {`)
 	for _, f := range o.GetField() {
 		p.P(`case "`, f.GetName(), `":`)
@@ -232,6 +233,23 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 		if p.IsMap(f) {
 			continue
 		}
+		if fExt, err := proto.GetExtension(f.Options, av_opts.E_Field); err == nil && fExt != nil {
+			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
+			if favOpt.ReadOnly {
+				p.P(`return fmt.Errorf("Field %s has readonly access", k)`)
+			} else if  favOpt.GetDeny() == av_opts.AtlasValidateFieldOption_create  {
+				p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
+				p.P(fmt.Sprintf(`if "POST" == method {`, ))
+				p.P(`return fmt.Errorf("Field %s unsupported for create method", k)`)
+				p.P("}")
+			} else if favOpt.GetDeny() == av_opts.AtlasValidateFieldOption_update {
+				p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
+				p.P(`if "PUT" == method || "PATCH" == method {`)
+				p.P(`return fmt.Errorf("Field %s unsupported for update method", k)`)
+				p.P("}")
+			}
+		}
+
 		if f.IsMessage() && f.IsRepeated() {
 			p.P(`if v[k] == nil {`)
 			p.P(`continue`)
@@ -242,7 +260,7 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 			p.P(`return fmt.Errorf("Invalid value for %q: expected array.", vArrPath)`)
 			p.P(`}`)
 			if gt == "" {
-				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(json.RawMessage, string, bool) error })`)
+				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(context.Context,json.RawMessage, string, bool) error })`)
 				p.P(`if !ok {`)
 				p.P(`continue`)
 				p.P(`}`)
@@ -250,11 +268,11 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 			p.P(`for i, vv := range vArr {`)
 			p.P(`vvPath := fmt.Sprintf("%s.[%d]", vArrPath, i)`)
 			if gt == "" {
-				p.P(`if err = validator.AtlasValidateJSON(vv, vvPath, allowUnknown); err != nil {`)
+				p.P(`if err = validator.AtlasValidateJSON(ctx, vv, vvPath, allowUnknown); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			} else {
-				p.P(`if err = validate_Object_`, gt, `(vv, vvPath, allowUnknown); err != nil {`)
+				p.P(`if err = validate_Object_`, gt, `(ctx, vv, vvPath, allowUnknown); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			}
@@ -266,15 +284,15 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 			p.P(`vv := v[k]`)
 			p.P(`vvPath := validate_runtime.JoinPath(path, k)`)
 			if gt == "" {
-				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(json.RawMessage, string, bool) error })`)
+				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(context.Context, json.RawMessage, string, bool) error })`)
 				p.P(`if !ok {`)
 				p.P(`continue`)
 				p.P(`}`)
-				p.P(`if err = validator.AtlasValidateJSON(vv, vvPath, allowUnknown); err != nil {`)
+				p.P(`if err = validator.AtlasValidateJSON(ctx, vv, vvPath, allowUnknown); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			} else {
-				p.P(`if err = validate_Object_`, gt, `(vv, vvPath, allowUnknown); err != nil {`)
+				p.P(`if err = validate_Object_`, gt, `(ctx, vv, vvPath, allowUnknown); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			}
@@ -291,13 +309,13 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P()
 
 	p.P(`// AtlasValidateJSON function validates a JSON for object `, t, `.`)
-	p.P(`func (o *`, t, `) AtlasValidateJSON(r json.RawMessage, path string, allowUnknown bool) (err error) {`)
+	p.P(`func (o *`, t, `) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path string, allowUnknown bool) (err error) {`)
 	p.P(`if hook, ok := interface{}(o).(interface { AtlasJSONValidate(json.RawMessage, string, bool) (json.RawMessage, error) }); ok {`)
 	p.P(`if r, err = hook.AtlasJSONValidate(r, path, allowUnknown); err != nil {`)
 	p.P(`return err`)
 	p.P(`}`)
 	p.P(`}`)
-	p.P(`return validate_Object_`, t, `(r, path, allowUnknown)`)
+	p.P(`return validate_Object_`, t, `(ctx, r, path, allowUnknown)`)
 	p.P(`}`)
 	p.P()
 }
@@ -317,7 +335,8 @@ func (p *Plugin) renderAnnotator() {
 	p.P(`return md`)
 	p.P(`}`)
 	p.P(`r.Body = ioutil.NopCloser(bytes.NewReader(b))`)
-	p.P(`if err = v.validator(b); err != nil {`)
+	p.P(`ctx := context.WithValue(context.Background(), "http-method", r.Method)`)
+	p.P(`if err = v.validator(ctx, b); err != nil {`)
 	p.P(`md.Set("Atlas-Validation-Error", err.Error())`)
 	p.P(`}`)
 	p.P(`break`)
@@ -344,3 +363,4 @@ func (p *Plugin) getMessage(t string) *descriptor.DescriptorProto {
 	file := p.ObjectNamed(t).File()
 	return file.GetMessage(strings.TrimPrefix(t, "."+file.GetPackage()+"."))
 }
+
