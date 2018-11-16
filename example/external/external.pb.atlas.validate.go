@@ -172,7 +172,7 @@ func AtlasValidateAnnotator(ctx context.Context, r *http.Request) metadata.MD {
 				return md
 			}
 			r.Body = ioutil.NopCloser(bytes.NewReader(b))
-			ctx := context.WithValue(context.WithValue(context.Background(), "http-method", r.Method), "allow-unknown", v.allowUnknown)
+			ctx := context.WithValue(context.WithValue(context.Background(), validate_runtime.HTTPMethodContextKey, r.Method), validate_runtime.AllowUnknownContextKey, v.allowUnknown)
 			if err = v.validator(ctx, b); err != nil {
 				md.Set("Atlas-Validation-Error", err.Error())
 			}
