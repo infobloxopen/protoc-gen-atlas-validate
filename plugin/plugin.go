@@ -336,7 +336,7 @@ func (p *Plugin) renderAnnotator() {
 	p.P(`return md`)
 	p.P(`}`)
 	p.P(`r.Body = ioutil.NopCloser(bytes.NewReader(b))`)
-	p.P(`ctx := context.WithValue(context.WithValue(context.Background(), "http-method", r.Method), "allow-unknown", v.allowUnknown)`)
+	p.P(`ctx := context.WithValue(context.WithValue(context.Background(), validate_runtime.HTTPMethodContextKey, r.Method), validate_runtime.AllowUnknownContextKey, v.allowUnknown)`)
 	p.P(`if err = v.validator(ctx, b); err != nil {`)
 	p.P(`md.Set("Atlas-Validation-Error", err.Error())`)
 	p.P(`}`)
