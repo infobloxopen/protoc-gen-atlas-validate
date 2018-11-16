@@ -7,6 +7,11 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
 
+const (
+	HTTPMethodContextKey = "http-method"
+	AllowUnknownContextKey = "allow-unknown"
+)
+
 func PatternMatch(pattern runtime.Pattern, path string) bool {
 	var components []string
 	var idx, l int
@@ -32,6 +37,11 @@ func JoinPath(path string, element string) string {
 }
 
 func HTTPMethodFromContext(ctx context.Context) (method string) {
-	method, _ = ctx.Value("http-method").(string)
+	method, _ = ctx.Value(HTTPMethodContextKey).(string)
 	return method
+}
+
+func GetAllowUnknownFromContext(ctx context.Context) (allowUnknown bool) {
+	allowUnknown, _ = ctx.Value(AllowUnknownContextKey).(bool)
+	return allowUnknown
 }
