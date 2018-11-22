@@ -236,17 +236,11 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 		}
 		if fExt, err := proto.GetExtension(f.Options, av_opts.E_Field); err == nil && fExt != nil {
 			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
-			if favOpt.ReadOnly {
-				p.P(`return fmt.Errorf("Field %s has readonly access", k)`)
-			} else if  favOpt.GetDeny() == av_opts.AtlasValidateFieldOption_create  {
+			methods := p.GetDeclinedMethods(favOpt.GetDeny())
+			if len(methods) != 0 {
 				p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
-				p.P(fmt.Sprintf(`if "POST" == method {`, ))
-				p.P(`return fmt.Errorf("Field %s unsupported for create method", k)`)
-				p.P("}")
-			} else if favOpt.GetDeny() == av_opts.AtlasValidateFieldOption_update {
-				p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
-				p.P(`if "PUT" == method || "PATCH" == method {`)
-				p.P(`return fmt.Errorf("Field %s unsupported for update method", k)`)
+				p.P(fmt.Sprintf(`if method == "%s" {`, strings.Join(methods, `" || method == "`)))
+				p.P(`return fmt.Errorf("Field %s unsupported for %s operation ", k, method)`)
 				p.P("}")
 			}
 		}
@@ -365,3 +359,22 @@ func (p *Plugin) getMessage(t string) *descriptor.DescriptorProto {
 	return file.GetMessage(strings.TrimPrefix(t, "."+file.GetPackage()+"."))
 }
 
+func (p *Plugin) GetDeclinedMethods(options []av_opts.AtlasValidateFieldOption_Operation) []string {
+	httpMethods := make(map[string]struct{}, 0)
+	for _, op := range options {
+		switch op {
+			case av_opts.AtlasValidateFieldOption_create:
+				httpMethods["POST"] = struct{}{}
+			case av_opts.AtlasValidateFieldOption_update:
+				httpMethods["PUT"] = struct{}{}
+				httpMethods["PATCH"] = struct{}{}
+		}
+	}
+
+	uniqueMethods := make([]string , 0)
+	for m := range httpMethods {
+		uniqueMethods = append(uniqueMethods, m)
+	}
+
+	return uniqueMethods
+}

@@ -27,7 +27,7 @@ message User {
 
 message Address {
 	string country = 1;
-	string state = 2 [(atlas_validate.field).read_only = true];
+	string state = 2 [(atlas_validate.field) = {deny:[update, create]}];
 	string city = 3;
 	string zip = 4;
 	map<string,string> tags = 10;
