@@ -201,11 +201,13 @@ func (p *Plugin) renderValidatorObjectMethods() {
 	for _, o := range p.file.GetMessageType() {
 		otype := p.getGoType(o.GetName())
 		p.renderValidatorObjectMethod(o, otype)
+		p.generateValidateRequired(o, otype)
 		for _, no := range o.GetNestedType() {
 			if no.GetOptions().GetMapEntry() {
 				continue
 			}
 			p.renderValidatorObjectMethod(no, otype+"_"+p.getGoType(no.GetName()))
+			p.generateValidateRequired(no, otype+"_"+p.getGoType(no.GetName()))
 		}
 	}
 }
@@ -223,8 +225,12 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P(`if err = json.Unmarshal(r, &v); err != nil {`)
 	p.P(`return fmt.Errorf("Invalid value for %q: expected object.", path)`)
 	p.P(`}`)
-	p.P("allowUnknown := validate_runtime.GetAllowUnknownFromContext(ctx)")
-
+	p.P(`allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)`)
+	p.P()
+	p.P(fmt.Sprintf(`if err = ValidateRequired_Object_%s(ctx, v); err != nil {`, t))
+	p.P(`return err`)
+	p.P(`}`)
+	p.P()
 	p.P(`for k, _ := range v {`)
 
 	p.P(`switch k {`)
@@ -377,4 +383,56 @@ func (p *Plugin) GetDeclinedMethods(options []av_opts.AtlasValidateFieldOption_O
 	}
 
 	return uniqueMethods
+}
+
+func (p *Plugin) GetRequiredMethods(options []av_opts.AtlasValidateFieldOption_Operation) []string {
+	requiredMethods := make(map[string]struct{}, 0)
+	for _, op := range options {
+		switch op {
+		case av_opts.AtlasValidateFieldOption_create:
+			requiredMethods["POST"] = struct{}{}
+		case av_opts.AtlasValidateFieldOption_update:
+			requiredMethods["PATCH"] = struct{}{}
+			requiredMethods["PUT"] = struct{}{}
+		}
+	}
+
+	uniqueMethods := make([]string , 0)
+	for m := range requiredMethods {
+		uniqueMethods = append(uniqueMethods, m)
+	}
+
+	return uniqueMethods
+}
+
+func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t string) {
+	requiredFields := make(map[string][]string)
+	for _, fd := range md.GetField() {
+		if fExt, err := proto.GetExtension(fd.Options, av_opts.E_Field); err == nil && fExt != nil {
+			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
+			methods := p.GetRequiredMethods(favOpt.GetRequired())
+			if len(methods) == 0 {
+				continue
+			}
+			requiredFields[fd.GetName()] = methods
+		}
+	}
+
+	p.P(fmt.Sprintf(`func ValidateRequired_Object_%s(ctx context.Context, v map[string]json.RawMessage) error {`, t))
+	p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
+	p.P(`_ = method`)
+
+	for fn, methods := range requiredFields {
+		if len(methods) == 3 {
+			p.P(fmt.Sprintf(`if _, ok := v["%s"]; !ok {`, fn))
+			p.P(fmt.Sprintf(`return fmt.Errorf("field %s required for %s" )`, fn, strings.Join(methods, ", ")))
+			p.P(`}`)
+		} else {
+			p.P(fmt.Sprintf(`if _, ok := v["%s"]; !ok && method == "%s"{`, fn, strings.Join(methods, `" || method == "`)))
+			p.P(fmt.Sprintf(`return fmt.Errorf("field %s required for %s" )`, fn, strings.Join(methods, ", ")))
+			p.P(`}`)
+		}
+	}
+	p.P(`return nil`)
+	p.P(`}`)
 }

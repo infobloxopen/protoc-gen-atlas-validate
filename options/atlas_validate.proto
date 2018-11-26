@@ -44,5 +44,6 @@ message AtlasValidateFieldOption {
   }
 
   repeated Operation deny = 1;
-  bool required = 2;
+
+  repeated Operation required = 2;
 }

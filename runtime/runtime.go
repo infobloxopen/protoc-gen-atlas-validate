@@ -41,7 +41,7 @@ func HTTPMethodFromContext(ctx context.Context) (method string) {
 	return method
 }
 
-func GetAllowUnknownFromContext(ctx context.Context) (allowUnknown bool) {
+func AllowUnknownFromContext(ctx context.Context) (allowUnknown bool) {
 	allowUnknown, _ = ctx.Value(AllowUnknownContextKey).(bool)
 	return allowUnknown
 }
