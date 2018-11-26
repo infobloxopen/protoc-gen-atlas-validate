@@ -14,6 +14,7 @@ import runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 import validate_runtime "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
 import proto "github.com/gogo/protobuf/proto"
 import math "math"
+import _ "github.com/infobloxopen/protoc-gen-atlas-validate/options"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -35,7 +36,12 @@ func validate_Object_ExternalUser(ctx context.Context, r json.RawMessage, path s
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("Invalid value for %q: expected object.", path)
 	}
-	allowUnknown := validate_runtime.GetAllowUnknownFromContext(ctx)
+	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
+
+	if err = ValidateRequired_Object_ExternalUser(ctx, v); err != nil {
+		return err
+	}
+
 	for k, _ := range v {
 		switch k {
 		case "id":
@@ -70,6 +76,12 @@ func (o *ExternalUser) AtlasValidateJSON(ctx context.Context, r json.RawMessage,
 	return validate_Object_ExternalUser(ctx, r, path)
 }
 
+func ValidateRequired_Object_ExternalUser(ctx context.Context, v map[string]json.RawMessage) error {
+	method := validate_runtime.HTTPMethodFromContext(ctx)
+	_ = method
+	return nil
+}
+
 // validate_Object_ExternalUser_Parent function validates a JSON for a given object.
 func validate_Object_ExternalUser_Parent(ctx context.Context, r json.RawMessage, path string) (err error) {
 	obj := &ExternalUser_Parent{}
@@ -84,7 +96,12 @@ func validate_Object_ExternalUser_Parent(ctx context.Context, r json.RawMessage,
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("Invalid value for %q: expected object.", path)
 	}
-	allowUnknown := validate_runtime.GetAllowUnknownFromContext(ctx)
+	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
+
+	if err = ValidateRequired_Object_ExternalUser_Parent(ctx, v); err != nil {
+		return err
+	}
+
 	for k, _ := range v {
 		switch k {
 		case "name":
@@ -109,6 +126,12 @@ func (o *ExternalUser_Parent) AtlasValidateJSON(ctx context.Context, r json.RawM
 	return validate_Object_ExternalUser_Parent(ctx, r, path)
 }
 
+func ValidateRequired_Object_ExternalUser_Parent(ctx context.Context, v map[string]json.RawMessage) error {
+	method := validate_runtime.HTTPMethodFromContext(ctx)
+	_ = method
+	return nil
+}
+
 // validate_Object_ExternalAddress function validates a JSON for a given object.
 func validate_Object_ExternalAddress(ctx context.Context, r json.RawMessage, path string) (err error) {
 	obj := &ExternalAddress{}
@@ -123,7 +146,12 @@ func validate_Object_ExternalAddress(ctx context.Context, r json.RawMessage, pat
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("Invalid value for %q: expected object.", path)
 	}
-	allowUnknown := validate_runtime.GetAllowUnknownFromContext(ctx)
+	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
+
+	if err = ValidateRequired_Object_ExternalAddress(ctx, v); err != nil {
+		return err
+	}
+
 	for k, _ := range v {
 		switch k {
 		case "country":
@@ -149,6 +177,12 @@ func (o *ExternalAddress) AtlasValidateJSON(ctx context.Context, r json.RawMessa
 		}
 	}
 	return validate_Object_ExternalAddress(ctx, r, path)
+}
+
+func ValidateRequired_Object_ExternalAddress(ctx context.Context, v map[string]json.RawMessage) error {
+	method := validate_runtime.HTTPMethodFromContext(ctx)
+	_ = method
+	return nil
 }
 
 var validate_Patterns = []struct {
