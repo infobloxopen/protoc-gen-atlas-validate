@@ -241,6 +241,9 @@ func (o *User) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path st
 func ValidateRequired_Object_User(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
+	if _, ok := v["name"]; !ok {
+		return fmt.Errorf("field name required for POST, PATCH, PUT")
+	}
 	return nil
 }
 
@@ -401,6 +404,12 @@ func (o *Group) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path s
 func ValidateRequired_Object_Group(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
+	if _, ok := v["name"]; !ok && (method == "POST") {
+		return fmt.Errorf("field name required for POST")
+	}
+	if _, ok := v["id"]; !ok && (method == "PATCH" || method == "PUT") {
+		return fmt.Errorf("field id required for PATCH, PUT")
+	}
 	return nil
 }
 
@@ -643,7 +652,7 @@ func validate_Object_Profile(ctx context.Context, r json.RawMessage, path string
 		case "id":
 		case "name":
 			method := validate_runtime.HTTPMethodFromContext(ctx)
-			if method == "PATCH" || method == "PUT" {
+			if method == "PUT" || method == "PATCH" {
 				return fmt.Errorf("Field %s unsupported for %s operation ", k, method)
 			}
 		case "notes":

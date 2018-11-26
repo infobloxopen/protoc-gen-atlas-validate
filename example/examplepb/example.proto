@@ -11,7 +11,7 @@ option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/e
 
 message User {
 	int32 id = 1 [(atlas_validate.field).deny = create];
-	string name = 2;
+	string name = 2 [(atlas_validate.field) = {required: [create, update]}];
 	Profile profile = 3;
 	Address address = 4;
 	repeated Group groups = 5;
@@ -23,6 +23,7 @@ message User {
 	repeated Parent parents = 6;
 
 	external.ExternalUser external_user = 7;
+
 }
 
 message Address {
@@ -34,8 +35,8 @@ message Address {
 }
 
 message Group {
-	int32 id = 1;
-	string name = 2;
+	int32 id = 1 [(atlas_validate.field).required = update];
+	string name = 2 [(atlas_validate.field).required = create];
 	string notes = 3;
 }
 
