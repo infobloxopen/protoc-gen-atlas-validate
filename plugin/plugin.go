@@ -369,15 +369,15 @@ func (p *Plugin) GetDeclinedMethods(options []av_opts.AtlasValidateFieldOption_O
 	httpMethods := make(map[string]struct{}, 0)
 	for _, op := range options {
 		switch op {
-			case av_opts.AtlasValidateFieldOption_create:
-				httpMethods["POST"] = struct{}{}
-			case av_opts.AtlasValidateFieldOption_update:
-				httpMethods["PUT"] = struct{}{}
-				httpMethods["PATCH"] = struct{}{}
+		case av_opts.AtlasValidateFieldOption_create:
+			httpMethods["POST"] = struct{}{}
+		case av_opts.AtlasValidateFieldOption_update:
+			httpMethods["PUT"] = struct{}{}
+			httpMethods["PATCH"] = struct{}{}
 		}
 	}
 
-	uniqueMethods := make([]string , 0)
+	uniqueMethods := make([]string, 0)
 	for m := range httpMethods {
 		uniqueMethods = append(uniqueMethods, m)
 	}
@@ -397,7 +397,7 @@ func (p *Plugin) GetRequiredMethods(options []av_opts.AtlasValidateFieldOption_O
 		}
 	}
 
-	uniqueMethods := make([]string , 0)
+	uniqueMethods := make([]string, 0)
 	for m := range requiredMethods {
 		uniqueMethods = append(uniqueMethods, m)
 	}
@@ -428,7 +428,7 @@ func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t stri
 			p.P(fmt.Sprintf(`return fmt.Errorf("field %s required for %s" )`, fn, strings.Join(methods, ", ")))
 			p.P(`}`)
 		} else {
-			p.P(fmt.Sprintf(`if _, ok := v["%s"]; !ok && method == "%s"{`, fn, strings.Join(methods, `" || method == "`)))
+			p.P(fmt.Sprintf(`if _, ok := v["%s"]; !ok && (method == "%s"){`, fn, strings.Join(methods, `" || method == "`)))
 			p.P(fmt.Sprintf(`return fmt.Errorf("field %s required for %s" )`, fn, strings.Join(methods, ", ")))
 			p.P(`}`)
 		}

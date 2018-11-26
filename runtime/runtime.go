@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	HTTPMethodContextKey = "http-method"
+	HTTPMethodContextKey   = "http-method"
 	AllowUnknownContextKey = "allow-unknown"
 )
 
