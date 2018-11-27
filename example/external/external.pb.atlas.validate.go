@@ -34,11 +34,11 @@ func validate_Object_ExternalUser(ctx context.Context, r json.RawMessage, path s
 	}
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
-		return fmt.Errorf("Invalid value for %q: expected object.", path)
+		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = validate_required_Object_ExternalUser(ctx, v); err != nil {
+	if err = validate_required_Object_ExternalUser(ctx, v, path); err != nil {
 		return err
 	}
 
@@ -57,7 +57,7 @@ func validate_Object_ExternalUser(ctx context.Context, r json.RawMessage, path s
 			}
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", validate_runtime.JoinPath(path, k))
 			}
 		}
 	}
@@ -76,7 +76,7 @@ func (o *ExternalUser) AtlasValidateJSON(ctx context.Context, r json.RawMessage,
 	return validate_Object_ExternalUser(ctx, r, path)
 }
 
-func validate_required_Object_ExternalUser(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_ExternalUser(ctx context.Context, v map[string]json.RawMessage, path string) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -94,11 +94,11 @@ func validate_Object_ExternalUser_Parent(ctx context.Context, r json.RawMessage,
 	}
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
-		return fmt.Errorf("Invalid value for %q: expected object.", path)
+		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = validate_required_Object_ExternalUser_Parent(ctx, v); err != nil {
+	if err = validate_required_Object_ExternalUser_Parent(ctx, v, path); err != nil {
 		return err
 	}
 
@@ -107,7 +107,7 @@ func validate_Object_ExternalUser_Parent(ctx context.Context, r json.RawMessage,
 		case "name":
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", validate_runtime.JoinPath(path, k))
 			}
 		}
 	}
@@ -126,7 +126,7 @@ func (o *ExternalUser_Parent) AtlasValidateJSON(ctx context.Context, r json.RawM
 	return validate_Object_ExternalUser_Parent(ctx, r, path)
 }
 
-func validate_required_Object_ExternalUser_Parent(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_ExternalUser_Parent(ctx context.Context, v map[string]json.RawMessage, path string) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -144,11 +144,11 @@ func validate_Object_ExternalAddress(ctx context.Context, r json.RawMessage, pat
 	}
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
-		return fmt.Errorf("Invalid value for %q: expected object.", path)
+		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = validate_required_Object_ExternalAddress(ctx, v); err != nil {
+	if err = validate_required_Object_ExternalAddress(ctx, v, path); err != nil {
 		return err
 	}
 
@@ -160,7 +160,7 @@ func validate_Object_ExternalAddress(ctx context.Context, r json.RawMessage, pat
 		case "zip":
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", validate_runtime.JoinPath(path, k))
 			}
 		}
 	}
@@ -179,7 +179,7 @@ func (o *ExternalAddress) AtlasValidateJSON(ctx context.Context, r json.RawMessa
 	return validate_Object_ExternalAddress(ctx, r, path)
 }
 
-func validate_required_Object_ExternalAddress(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_ExternalAddress(ctx context.Context, v map[string]json.RawMessage, path string) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -202,7 +202,7 @@ func AtlasValidateAnnotator(ctx context.Context, r *http.Request) metadata.MD {
 			var b []byte
 			var err error
 			if b, err = ioutil.ReadAll(r.Body); err != nil {
-				md.Set("Atlas-Validation-Error", "Invalid value: unable to parse body")
+				md.Set("Atlas-Validation-Error", "invalid value: unable to parse body")
 				return md
 			}
 			r.Body = ioutil.NopCloser(bytes.NewReader(b))

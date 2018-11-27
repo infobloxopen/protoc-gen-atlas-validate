@@ -163,7 +163,7 @@ func (p *Plugin) renderValidatorMethods() {
 		switch m.httpBody {
 		case "":
 			p.P(`if len(r) != 0 {`)
-			p.P(`return fmt.Errorf("Body is not allowed")`)
+			p.P(`return fmt.Errorf("body is not allowed")`)
 			p.P(`}`)
 			p.P(`return nil`)
 		case "*":
@@ -223,11 +223,11 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P(`}`)
 	p.P(`var v map[string]json.RawMessage`)
 	p.P(`if err = json.Unmarshal(r, &v); err != nil {`)
-	p.P(`return fmt.Errorf("Invalid value for %q: expected object.", path)`)
+	p.P(`return fmt.Errorf("invalid value for %q: expected object.", path)`)
 	p.P(`}`)
 	p.P(`allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)`)
 	p.P()
-	p.P(fmt.Sprintf(`if err = validate_required_Object_%s(ctx, v); err != nil {`, t))
+	p.P(fmt.Sprintf(`if err = validate_required_Object_%s(ctx, v, path); err != nil {`, t))
 	p.P(`return err`)
 	p.P(`}`)
 	p.P()
@@ -246,7 +246,7 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 			if len(methods) != 0 {
 				p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
 				p.P(fmt.Sprintf(`if method == "%s" {`, strings.Join(methods, `" || method == "`)))
-				p.P(`return fmt.Errorf("Field %s unsupported for %s operation ", k, method)`)
+				p.P(`return fmt.Errorf("field %q is unsupported for %q operation.", k, method)`)
 				p.P("}")
 			}
 		}
@@ -258,7 +258,7 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 			p.P(`var vArr []json.RawMessage`)
 			p.P(`vArrPath := validate_runtime.JoinPath(path, k)`)
 			p.P(`if err = json.Unmarshal(v[k], &vArr); err != nil {`)
-			p.P(`return fmt.Errorf("Invalid value for %q: expected array.", vArrPath)`)
+			p.P(`return fmt.Errorf("invalid value for %q: expected array.", vArrPath)`)
 			p.P(`}`)
 			if gt == "" {
 				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(context.Context,json.RawMessage, string) error })`)
@@ -301,7 +301,7 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	}
 	p.P(`default:`)
 	p.P(`if !allowUnknown {`)
-	p.P(`return fmt.Errorf("Unknown field %q", validate_runtime.JoinPath(path, k))`)
+	p.P(`return fmt.Errorf("unknown field %q.", validate_runtime.JoinPath(path, k))`)
 	p.P(`}`)
 	p.P(`}`)
 	p.P(`}`)
@@ -332,7 +332,7 @@ func (p *Plugin) renderAnnotator() {
 	p.P(`var b []byte`)
 	p.P(`var err error`)
 	p.P(`if b, err = ioutil.ReadAll(r.Body); err != nil {`)
-	p.P(`md.Set("Atlas-Validation-Error", "Invalid value: unable to parse body")`)
+	p.P(`md.Set("Atlas-Validation-Error", "invalid value: unable to parse body")`)
 	p.P(`return md`)
 	p.P(`}`)
 	p.P(`r.Body = ioutil.NopCloser(bytes.NewReader(b))`)
@@ -420,18 +420,20 @@ func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t stri
 		}
 	}
 
-	p.P(fmt.Sprintf(`func validate_required_Object_%s(ctx context.Context, v map[string]json.RawMessage) error {`, t))
+	p.P(fmt.Sprintf(`func validate_required_Object_%s(ctx context.Context, v map[string]json.RawMessage, path string) error {`, t))
 	p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
 	p.P(`_ = method`)
 
 	for fn, methods := range requiredFields {
 		if len(methods) == 3 {
 			p.P(fmt.Sprintf(`if _, ok := v["%s"]; !ok {`, fn))
-			p.P(`return fmt.Errorf("field `+ fn +` required for %s", method)`)
+			p.P(fmt.Sprintf(`fieldPath := validate_runtime.JoinPath(path, "%s")`, fn))
+			p.P(`return fmt.Errorf("field %q is required for %q operation.", fieldPath, method)`)
 			p.P(`}`)
 		} else {
 			p.P(fmt.Sprintf(`if _, ok := v["%s"]; !ok && (method == "%s"){`, fn, strings.Join(methods, `" || method == "`)))
-			p.P(`return fmt.Errorf("field `+fn+` required for %s", method)`)
+			p.P(fmt.Sprintf(`fieldPath := validate_runtime.JoinPath(path, "%s")`, fn))
+			p.P(`return fmt.Errorf("field %q is required for %q operation.", fieldPath, method)`)
 			p.P(`}`)
 		}
 	}
