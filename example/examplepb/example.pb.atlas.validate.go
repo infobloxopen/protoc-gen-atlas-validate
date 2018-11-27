@@ -142,7 +142,7 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_User(ctx, v); err != nil {
+	if err = validate_required_Object_User(ctx, v); err != nil {
 		return err
 	}
 
@@ -238,7 +238,7 @@ func (o *User) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path st
 	return validate_Object_User(ctx, r, path)
 }
 
-func ValidateRequired_Object_User(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_User(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	if _, ok := v["name"]; !ok {
@@ -263,7 +263,7 @@ func validate_Object_User_Parent(ctx context.Context, r json.RawMessage, path st
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_User_Parent(ctx, v); err != nil {
+	if err = validate_required_Object_User_Parent(ctx, v); err != nil {
 		return err
 	}
 
@@ -291,7 +291,7 @@ func (o *User_Parent) AtlasValidateJSON(ctx context.Context, r json.RawMessage, 
 	return validate_Object_User_Parent(ctx, r, path)
 }
 
-func ValidateRequired_Object_User_Parent(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_User_Parent(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -313,7 +313,7 @@ func validate_Object_Address(ctx context.Context, r json.RawMessage, path string
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_Address(ctx, v); err != nil {
+	if err = validate_required_Object_Address(ctx, v); err != nil {
 		return err
 	}
 
@@ -349,7 +349,7 @@ func (o *Address) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path
 	return validate_Object_Address(ctx, r, path)
 }
 
-func ValidateRequired_Object_Address(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_Address(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -371,7 +371,7 @@ func validate_Object_Group(ctx context.Context, r json.RawMessage, path string) 
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_Group(ctx, v); err != nil {
+	if err = validate_required_Object_Group(ctx, v); err != nil {
 		return err
 	}
 
@@ -401,14 +401,14 @@ func (o *Group) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path s
 	return validate_Object_Group(ctx, r, path)
 }
 
-func ValidateRequired_Object_Group(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_Group(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
-	if _, ok := v["name"]; !ok && (method == "POST") {
-		return fmt.Errorf("field name required for POST")
-	}
 	if _, ok := v["id"]; !ok && (method == "PATCH" || method == "PUT") {
 		return fmt.Errorf("field id required for PATCH, PUT")
+	}
+	if _, ok := v["name"]; !ok && (method == "POST") {
+		return fmt.Errorf("field name required for POST")
 	}
 	return nil
 }
@@ -429,7 +429,7 @@ func validate_Object_CreateUserRequest(ctx context.Context, r json.RawMessage, p
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_CreateUserRequest(ctx, v); err != nil {
+	if err = validate_required_Object_CreateUserRequest(ctx, v); err != nil {
 		return err
 	}
 
@@ -465,7 +465,7 @@ func (o *CreateUserRequest) AtlasValidateJSON(ctx context.Context, r json.RawMes
 	return validate_Object_CreateUserRequest(ctx, r, path)
 }
 
-func ValidateRequired_Object_CreateUserRequest(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_CreateUserRequest(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -487,7 +487,7 @@ func validate_Object_UpdateUserRequest(ctx context.Context, r json.RawMessage, p
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_UpdateUserRequest(ctx, v); err != nil {
+	if err = validate_required_Object_UpdateUserRequest(ctx, v); err != nil {
 		return err
 	}
 
@@ -523,7 +523,7 @@ func (o *UpdateUserRequest) AtlasValidateJSON(ctx context.Context, r json.RawMes
 	return validate_Object_UpdateUserRequest(ctx, r, path)
 }
 
-func ValidateRequired_Object_UpdateUserRequest(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_UpdateUserRequest(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -545,7 +545,7 @@ func validate_Object_EmptyRequest(ctx context.Context, r json.RawMessage, path s
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_EmptyRequest(ctx, v); err != nil {
+	if err = validate_required_Object_EmptyRequest(ctx, v); err != nil {
 		return err
 	}
 
@@ -572,7 +572,7 @@ func (o *EmptyRequest) AtlasValidateJSON(ctx context.Context, r json.RawMessage,
 	return validate_Object_EmptyRequest(ctx, r, path)
 }
 
-func ValidateRequired_Object_EmptyRequest(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_EmptyRequest(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -594,7 +594,7 @@ func validate_Object_EmptyResponse(ctx context.Context, r json.RawMessage, path 
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_EmptyResponse(ctx, v); err != nil {
+	if err = validate_required_Object_EmptyResponse(ctx, v); err != nil {
 		return err
 	}
 
@@ -621,7 +621,7 @@ func (o *EmptyResponse) AtlasValidateJSON(ctx context.Context, r json.RawMessage
 	return validate_Object_EmptyResponse(ctx, r, path)
 }
 
-func ValidateRequired_Object_EmptyResponse(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_EmptyResponse(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -643,7 +643,7 @@ func validate_Object_Profile(ctx context.Context, r json.RawMessage, path string
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_Profile(ctx, v); err != nil {
+	if err = validate_required_Object_Profile(ctx, v); err != nil {
 		return err
 	}
 
@@ -677,7 +677,7 @@ func (o *Profile) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path
 	return validate_Object_Profile(ctx, r, path)
 }
 
-func ValidateRequired_Object_Profile(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_Profile(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -699,7 +699,7 @@ func validate_Object_UpdateProfileRequest(ctx context.Context, r json.RawMessage
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_UpdateProfileRequest(ctx, v); err != nil {
+	if err = validate_required_Object_UpdateProfileRequest(ctx, v); err != nil {
 		return err
 	}
 
@@ -735,7 +735,7 @@ func (o *UpdateProfileRequest) AtlasValidateJSON(ctx context.Context, r json.Raw
 	return validate_Object_UpdateProfileRequest(ctx, r, path)
 }
 
-func ValidateRequired_Object_UpdateProfileRequest(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_UpdateProfileRequest(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil

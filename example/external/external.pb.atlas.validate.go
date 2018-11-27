@@ -38,7 +38,7 @@ func validate_Object_ExternalUser(ctx context.Context, r json.RawMessage, path s
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_ExternalUser(ctx, v); err != nil {
+	if err = validate_required_Object_ExternalUser(ctx, v); err != nil {
 		return err
 	}
 
@@ -76,7 +76,7 @@ func (o *ExternalUser) AtlasValidateJSON(ctx context.Context, r json.RawMessage,
 	return validate_Object_ExternalUser(ctx, r, path)
 }
 
-func ValidateRequired_Object_ExternalUser(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_ExternalUser(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -98,7 +98,7 @@ func validate_Object_ExternalUser_Parent(ctx context.Context, r json.RawMessage,
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_ExternalUser_Parent(ctx, v); err != nil {
+	if err = validate_required_Object_ExternalUser_Parent(ctx, v); err != nil {
 		return err
 	}
 
@@ -126,7 +126,7 @@ func (o *ExternalUser_Parent) AtlasValidateJSON(ctx context.Context, r json.RawM
 	return validate_Object_ExternalUser_Parent(ctx, r, path)
 }
 
-func ValidateRequired_Object_ExternalUser_Parent(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_ExternalUser_Parent(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
@@ -148,7 +148,7 @@ func validate_Object_ExternalAddress(ctx context.Context, r json.RawMessage, pat
 	}
 	allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)
 
-	if err = ValidateRequired_Object_ExternalAddress(ctx, v); err != nil {
+	if err = validate_required_Object_ExternalAddress(ctx, v); err != nil {
 		return err
 	}
 
@@ -179,7 +179,7 @@ func (o *ExternalAddress) AtlasValidateJSON(ctx context.Context, r json.RawMessa
 	return validate_Object_ExternalAddress(ctx, r, path)
 }
 
-func ValidateRequired_Object_ExternalAddress(ctx context.Context, v map[string]json.RawMessage) error {
+func validate_required_Object_ExternalAddress(ctx context.Context, v map[string]json.RawMessage) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil

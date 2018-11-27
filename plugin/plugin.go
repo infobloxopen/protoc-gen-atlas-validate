@@ -227,7 +227,7 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P(`}`)
 	p.P(`allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)`)
 	p.P()
-	p.P(fmt.Sprintf(`if err = ValidateRequired_Object_%s(ctx, v); err != nil {`, t))
+	p.P(fmt.Sprintf(`if err = validate_required_Object_%s(ctx, v); err != nil {`, t))
 	p.P(`return err`)
 	p.P(`}`)
 	p.P()
@@ -418,7 +418,7 @@ func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t stri
 		}
 	}
 
-	p.P(fmt.Sprintf(`func ValidateRequired_Object_%s(ctx context.Context, v map[string]json.RawMessage) error {`, t))
+	p.P(fmt.Sprintf(`func validate_required_Object_%s(ctx context.Context, v map[string]json.RawMessage) error {`, t))
 	p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
 	p.P(`_ = method`)
 
