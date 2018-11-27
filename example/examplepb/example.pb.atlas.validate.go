@@ -242,7 +242,7 @@ func validate_required_Object_User(ctx context.Context, v map[string]json.RawMes
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	if _, ok := v["name"]; !ok {
-		return fmt.Errorf("field name required for POST, PATCH, PUT")
+		return fmt.Errorf("field name required for %s", method)
 	}
 	return nil
 }
@@ -322,7 +322,7 @@ func validate_Object_Address(ctx context.Context, r json.RawMessage, path string
 		case "country":
 		case "state":
 			method := validate_runtime.HTTPMethodFromContext(ctx)
-			if method == "PUT" || method == "PATCH" || method == "POST" {
+			if method == "PATCH" || method == "POST" || method == "PUT" {
 				return fmt.Errorf("Field %s unsupported for %s operation ", k, method)
 			}
 		case "city":
@@ -405,10 +405,10 @@ func validate_required_Object_Group(ctx context.Context, v map[string]json.RawMe
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
 	if _, ok := v["id"]; !ok && (method == "PATCH" || method == "PUT") {
-		return fmt.Errorf("field id required for PATCH, PUT")
+		return fmt.Errorf("field id required for %s", method)
 	}
 	if _, ok := v["name"]; !ok && (method == "POST") {
-		return fmt.Errorf("field name required for POST")
+		return fmt.Errorf("field name required for %s", method)
 	}
 	return nil
 }

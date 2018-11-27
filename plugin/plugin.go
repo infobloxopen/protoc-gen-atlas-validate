@@ -242,7 +242,7 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 		}
 		if fExt, err := proto.GetExtension(f.Options, av_opts.E_Field); err == nil && fExt != nil {
 			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
-			methods := p.GetDeclinedMethods(favOpt.GetDeny())
+			methods := p.GetDeniedMethods(favOpt.GetDeny())
 			if len(methods) != 0 {
 				p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
 				p.P(fmt.Sprintf(`if method == "%s" {`, strings.Join(methods, `" || method == "`)))
@@ -365,7 +365,8 @@ func (p *Plugin) getMessage(t string) *descriptor.DescriptorProto {
 	return file.GetMessage(strings.TrimPrefix(t, "."+file.GetPackage()+"."))
 }
 
-func (p *Plugin) GetDeclinedMethods(options []av_opts.AtlasValidateFieldOption_Operation) []string {
+//Return methods to which field marked as denied
+func (p *Plugin) GetDeniedMethods(options []av_opts.AtlasValidateFieldOption_Operation) []string {
 	httpMethods := make(map[string]struct{}, 0)
 	for _, op := range options {
 		switch op {
@@ -385,6 +386,7 @@ func (p *Plugin) GetDeclinedMethods(options []av_opts.AtlasValidateFieldOption_O
 	return uniqueMethods
 }
 
+//Return methods to which field marked as required
 func (p *Plugin) GetRequiredMethods(options []av_opts.AtlasValidateFieldOption_Operation) []string {
 	requiredMethods := make(map[string]struct{}, 0)
 	for _, op := range options {
@@ -425,11 +427,11 @@ func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t stri
 	for fn, methods := range requiredFields {
 		if len(methods) == 3 {
 			p.P(fmt.Sprintf(`if _, ok := v["%s"]; !ok {`, fn))
-			p.P(fmt.Sprintf(`return fmt.Errorf("field %s required for %s" )`, fn, strings.Join(methods, ", ")))
+			p.P(`return fmt.Errorf("field `+ fn +` required for %s", method)`)
 			p.P(`}`)
 		} else {
 			p.P(fmt.Sprintf(`if _, ok := v["%s"]; !ok && (method == "%s"){`, fn, strings.Join(methods, `" || method == "`)))
-			p.P(fmt.Sprintf(`return fmt.Errorf("field %s required for %s" )`, fn, strings.Join(methods, ", ")))
+			p.P(`return fmt.Errorf("field `+fn+` required for %s", method)`)
 			p.P(`}`)
 		}
 	}
