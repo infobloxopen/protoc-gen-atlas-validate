@@ -150,3 +150,80 @@ func TestAllowUnknown(t *testing.T) {
 		}
 	}
 }
+
+func TestRequiredFields(t *testing.T) {
+	tests := []Test{
+		{
+			input:            json.RawMessage([]byte(`{"profile": {"id": 1}, "address": {"country": "USA","state":"NY", "city": "New York", "zip": "21412412"}}`)),
+			validateFunction: validate_Users_Create_0,
+			context:          context.WithValue(context.Background(), runtime.HTTPMethodContextKey, "POST"),
+			negative:         true,
+		},
+		{
+			input:            json.RawMessage([]byte(`{"name": "first", "profile": {"id": 1}, "address": {"country": "USA","city": "New York", "zip": "21412412"}}`)),
+			validateFunction: validate_Users_Create_0,
+			context:          context.WithValue(context.Background(), runtime.HTTPMethodContextKey, "POST"),
+			negative:         false,
+		},
+		{
+			input:            json.RawMessage([]byte(`{"profile": {"id": 1}, "address": {"country": "USA", "city": "New York", "zip": "21412412"}}`)),
+			validateFunction: validate_Users_Update_0,
+			context:          context.WithValue(context.Background(), runtime.HTTPMethodContextKey, "PUT"),
+			negative:         true,
+		},
+		{
+			input:            json.RawMessage([]byte(`{"name": "first", "profile": {"id": 1}, "address": {"country": "USA","city": "New York", "zip": "21412412"}}`)),
+			validateFunction: validate_Users_Update_0,
+			context:          context.WithValue(context.Background(), runtime.HTTPMethodContextKey, "PUT"),
+			negative:         false,
+		},
+		{
+			input:            json.RawMessage([]byte(`{"id": 1, "notes": "some notes", "unknown_field": "unknown_value"}`)),
+			validateFunction: validate_Groups_Create_0,
+			context:          context.WithValue(context.WithValue(context.Background(), runtime.HTTPMethodContextKey, "POST"), runtime.AllowUnknownContextKey, true),
+			negative:         true,
+		},
+		{
+			input:            json.RawMessage([]byte(`{"id": 1, "name": "first", "notes": "some notes", "unknown_field": "unknown_value"}`)),
+			validateFunction: validate_Groups_Create_0,
+			context:          context.WithValue(context.WithValue(context.Background(), runtime.HTTPMethodContextKey, "PUT"), runtime.AllowUnknownContextKey, true),
+			negative:         false,
+		},
+		{
+			input:            json.RawMessage([]byte(`{"id": 1,  "notes": "some notes", "unknown_field": "unknown_value"}`)),
+			validateFunction: validate_Groups_Update_0,
+			context:          context.WithValue(context.WithValue(context.Background(), runtime.HTTPMethodContextKey, "PUT"), runtime.AllowUnknownContextKey, true),
+			negative:         false,
+		},
+		{
+			input:            json.RawMessage([]byte(`{"name": "first", "notes": "some notes", "unknown_field": "unknown_value"}`)),
+			validateFunction: validate_Groups_Update_0,
+			context:          context.WithValue(context.WithValue(context.Background(), runtime.HTTPMethodContextKey, "PUT"), runtime.AllowUnknownContextKey, true),
+			negative:         true,
+		},
+		{
+			input:            json.RawMessage([]byte(`{"id": 1, "name": "first", "notes": "some notes", "unknown_field": "unknown_value"}`)),
+			validateFunction: validate_Groups_Update_0,
+			context:          context.WithValue(context.WithValue(context.Background(), runtime.HTTPMethodContextKey, "PUT"), runtime.AllowUnknownContextKey, true),
+			negative:         false,
+		},
+		{
+			input:            json.RawMessage([]byte(`{"name": "first", "notes": "some notes", "unknown_field": "unknown_value"}`)),
+			validateFunction: validate_Groups_Create_0,
+			context:          context.WithValue(context.WithValue(context.Background(), runtime.HTTPMethodContextKey, "POST"), runtime.AllowUnknownContextKey, true),
+			negative:         false,
+		},
+	}
+
+	for n, test := range tests {
+		err := test.validateFunction(test.context, test.input)
+		if err == nil && test.negative {
+			t.Errorf(" %d test failed, error must be not nil \n", n+1)
+		}
+
+		if err != nil && !test.negative {
+			t.Errorf(" %d test failed, error %s \n", n+1, err.Error())
+		}
+
+	}
+}

@@ -53,9 +53,12 @@ option (atlas_validate.file).allow_unknown_fields = false;
 Field option:
 ```
 message User {
+   //Field denied for create
    int64  id    = 1 [(atlas_validate.field).deny =  create];
-   string name  = 2 [(atlas_validate.field).deny =  update];
-   string email = 3 [(atlas_validate.field).read_only = true];
+   // Field denied for update and required for create
+   string name  = 2 [(atlas_validate.field).deny =  update, (atlas_validate.field).require = create]; 
+   //Field denied for create and update (ReadOnly access)
+   string email = 3 [(atlas_validate.field) = {deny: [create, update]}]; 
 }
 ```
 ### Generation

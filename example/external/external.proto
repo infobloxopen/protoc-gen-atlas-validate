@@ -3,6 +3,8 @@ syntax = "proto3";
 package external;
 
 import "google/api/annotations.proto";
+import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
+
 
 option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/external;external";
 

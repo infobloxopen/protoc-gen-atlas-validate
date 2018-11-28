@@ -43,8 +43,7 @@ message AtlasValidateFieldOption {
     update = 1;
   }
 
+  repeated Operation deny = 1;
 
-  Operation deny = 1;
-  bool read_only = 2;
-
+  repeated Operation required = 2;
 }
