@@ -41,6 +41,9 @@ message AtlasValidateFieldOption {
 
     //Field allow only on update operation
     update = 1;
+
+    //Field allow only on replace operation
+    replace = 2;
   }
 
   repeated Operation deny = 1;

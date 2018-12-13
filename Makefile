@@ -58,4 +58,4 @@ gentool-options:
                 	$(PROJECT_ROOT)/options/atlas_validate.proto
 
 test: gentool-examples
-	go test ./example/examplepb
+	go test -v -cover ./example/examplepb
