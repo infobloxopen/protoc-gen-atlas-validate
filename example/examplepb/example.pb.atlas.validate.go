@@ -323,7 +323,7 @@ func validate_Object_Address(ctx context.Context, r json.RawMessage, path string
 		case "country":
 		case "state":
 			method := validate_runtime.HTTPMethodFromContext(ctx)
-			if method == "PATCH" || method == "POST" || method == "PUT" {
+			if method == "PATCH" || method == "PUT" || method == "POST" {
 				return fmt.Errorf("field %q is unsupported for %q operation.", k, method)
 			}
 		case "city":
@@ -655,7 +655,7 @@ func validate_Object_Profile(ctx context.Context, r json.RawMessage, path string
 		case "id":
 		case "name":
 			method := validate_runtime.HTTPMethodFromContext(ctx)
-			if method == "PUT" || method == "PATCH" {
+			if method == "PATCH" || method == "PUT" {
 				return fmt.Errorf("field %q is unsupported for %q operation.", k, method)
 			}
 		case "notes":

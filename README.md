@@ -55,10 +55,10 @@ Field option:
 message User {
    //Field denied for create
    int64  id    = 1 [(atlas_validate.field).deny =  create];
-   // Field denied for update and required for create
-   string name  = 2 [(atlas_validate.field).deny =  update, (atlas_validate.field).require = create]; 
-   //Field denied for create and update (ReadOnly access)
-   string email = 3 [(atlas_validate.field) = {deny: [create, update]}]; 
+   // Field denied for update and required for create and replace operations
+   string name  = 2 [(atlas_validate.field).deny =  update, (atlas_validate.field) = {require: [create, replace]}]; 
+   //Field denied for create, replace and update (ReadOnly access)
+   string email = 3 [(atlas_validate.field) = {deny: [create, replace, update]}]; 
 }
 ```
 ### Generation
