@@ -238,6 +238,15 @@ func (o *User) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path st
 	return validate_Object_User(ctx, r, path)
 }
 
+// ValidateRequiredFileds function return required fields of objectUser.
+func (o *User) ValidateRequiredFileds() map[string][]string {
+	return map[string][]string{
+		"POST":  []string{"Name"},
+		"PUT":   []string{"Name"},
+		"PATCH": []string{"Name"},
+	}
+}
+
 func validate_required_Object_User(ctx context.Context, v map[string]json.RawMessage, path string) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
@@ -400,6 +409,15 @@ func (o *Group) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path s
 		}
 	}
 	return validate_Object_Group(ctx, r, path)
+}
+
+// ValidateRequiredFileds function return required fields of objectGroup.
+func (o *Group) ValidateRequiredFileds() map[string][]string {
+	return map[string][]string{
+		"PATCH": []string{"Id"},
+		"PUT":   []string{"Id"},
+		"POST":  []string{"Name"},
+	}
 }
 
 func validate_required_Object_Group(ctx context.Context, v map[string]json.RawMessage, path string) error {

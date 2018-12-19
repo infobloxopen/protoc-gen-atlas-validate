@@ -411,6 +411,9 @@ func (p *Plugin) GetRequiredMethods(options []av_opts.AtlasValidateFieldOption_O
 
 func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t string) {
 	requiredFields := make(map[string][]string)
+
+	requiredMethodGtFileds := map[string][]string{}
+
 	for _, fd := range md.GetField() {
 		if fExt, err := proto.GetExtension(fd.Options, av_opts.E_Field); err == nil && fExt != nil {
 			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
@@ -419,7 +422,26 @@ func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t stri
 				continue
 			}
 			requiredFields[fd.GetName()] = methods
+
+			ccName := generator.CamelCase(fd.GetName())
+			for _, method := range methods {
+				requiredMethodGtFileds[method] = append(requiredMethodGtFileds[method], ccName)
+			}
 		}
+	}
+
+	if len(requiredMethodGtFileds) > 0 {
+		p.P(`// ValidateRequiredFileds function return required fields of object`, t, `.`)
+		p.P(`func (o *`, t, `) ValidateRequiredFileds() map[string][]string {`)
+		p.P(`return map[string][]string{`)
+		for method, fields := range requiredMethodGtFileds {
+			if len(fields) > 0 {
+				p.P(fmt.Sprintf(`"%s":[]string{"`, method), strings.Join(fields, `","`), `"},`)
+			}
+		}
+		p.P(`}`) // end map
+		p.P(`}`)
+		p.P()
 	}
 
 	p.P(fmt.Sprintf(`func validate_required_Object_%s(ctx context.Context, v map[string]json.RawMessage, path string) error {`, t))

@@ -45,12 +45,12 @@ gentool-examples: gentool
                 --atlas-validate_out="$(DOCKERPATH)" \
                         example/examplepb/example.proto
 
-	    $(GENERATOR) \
-		-I/go/src/github.com/infobloxopen/protoc-gen-atlas-validate \
-                --go_out="plugins=grpc:$(DOCKERPATH)" \
-		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
-                --atlas-validate_out="$(DOCKERPATH)" \
-                        example/external/external.proto
+	#     $(GENERATOR) \
+	# 	-I/go/src/github.com/infobloxopen/protoc-gen-atlas-validate \
+        #         --go_out="plugins=grpc:$(DOCKERPATH)" \
+	# 	--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
+        #         --atlas-validate_out="$(DOCKERPATH)" \
+        #                 example/external/external.proto
 
 gentool-options:
 	$(GENERATOR) \
