@@ -201,12 +201,14 @@ func (p *Plugin) renderValidatorObjectMethods() {
 	for _, o := range p.file.GetMessageType() {
 		otype := p.getGoType(o.GetName())
 		p.renderValidatorObjectMethod(o, otype)
+		p.generateValidateDeniedFields(o, otype)
 		p.generateValidateRequired(o, otype)
 		for _, no := range o.GetNestedType() {
 			if no.GetOptions().GetMapEntry() {
 				continue
 			}
 			p.renderValidatorObjectMethod(no, otype+"_"+p.getGoType(no.GetName()))
+			p.generateValidateDeniedFields(no, otype+"_"+p.getGoType(no.GetName()))
 			p.generateValidateRequired(no, otype+"_"+p.getGoType(no.GetName()))
 		}
 	}
@@ -409,11 +411,41 @@ func (p *Plugin) GetRequiredMethods(options []av_opts.AtlasValidateFieldOption_O
 	return uniqueMethods
 }
 
+func (p *Plugin) generateValidateDeniedFields(md *descriptor.DescriptorProto, t string) {
+	deniedMethodFields := map[string][]string{}
+	for _, fd := range md.GetField() {
+		if fExt, err := proto.GetExtension(fd.Options, av_opts.E_Field); err == nil && fExt != nil {
+			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
+			methods := p.GetDeniedMethods(favOpt.GetDeny())
+			if len(methods) == 0 {
+				continue
+			}
+
+			ccName := generator.CamelCase(fd.GetName())
+			for _, method := range methods {
+				deniedMethodFields[method] = append(deniedMethodFields[method], ccName)
+			}
+		}
+	}
+
+	if len(deniedMethodFields) > 0 {
+		p.P(`// ValidateDeniedFields function return denied fields of object`, t, `.`)
+		p.P(`func (o *`, t, `) ValidateDeniedFields() map[string][]string {`)
+		p.P(`return map[string][]string{`)
+		for method, fields := range deniedMethodFields {
+			if len(fields) > 0 {
+				p.P(fmt.Sprintf(`"%s":[]string{"`, method), strings.Join(fields, `","`), `"},`)
+			}
+		}
+		p.P(`}`) // end map
+		p.P(`}`)
+		p.P()
+	}
+}
+
 func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t string) {
 	requiredFields := make(map[string][]string)
-
-	requiredMethodGtFileds := map[string][]string{}
-
+	requiredMethodFields := map[string][]string{}
 	for _, fd := range md.GetField() {
 		if fExt, err := proto.GetExtension(fd.Options, av_opts.E_Field); err == nil && fExt != nil {
 			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
@@ -425,16 +457,16 @@ func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t stri
 
 			ccName := generator.CamelCase(fd.GetName())
 			for _, method := range methods {
-				requiredMethodGtFileds[method] = append(requiredMethodGtFileds[method], ccName)
+				requiredMethodFields[method] = append(requiredMethodFields[method], ccName)
 			}
 		}
 	}
 
-	if len(requiredMethodGtFileds) > 0 {
-		p.P(`// ValidateRequiredFileds function return required fields of object`, t, `.`)
-		p.P(`func (o *`, t, `) ValidateRequiredFileds() map[string][]string {`)
+	if len(requiredMethodFields) > 0 {
+		p.P(`// ValidateRequiredFields function return required fields of object`, t, `.`)
+		p.P(`func (o *`, t, `) ValidateRequiredFields() map[string][]string {`)
 		p.P(`return map[string][]string{`)
-		for method, fields := range requiredMethodGtFileds {
+		for method, fields := range requiredMethodFields {
 			if len(fields) > 0 {
 				p.P(fmt.Sprintf(`"%s":[]string{"`, method), strings.Join(fields, `","`), `"},`)
 			}

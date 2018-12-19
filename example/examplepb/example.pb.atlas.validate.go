@@ -238,8 +238,15 @@ func (o *User) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path st
 	return validate_Object_User(ctx, r, path)
 }
 
-// ValidateRequiredFileds function return required fields of objectUser.
-func (o *User) ValidateRequiredFileds() map[string][]string {
+// ValidateDeniedFields function return denied fields of objectUser.
+func (o *User) ValidateDeniedFields() map[string][]string {
+	return map[string][]string{
+		"POST": []string{"Id"},
+	}
+}
+
+// ValidateRequiredFields function return required fields of objectUser.
+func (o *User) ValidateRequiredFields() map[string][]string {
 	return map[string][]string{
 		"POST":  []string{"Name"},
 		"PUT":   []string{"Name"},
@@ -359,6 +366,15 @@ func (o *Address) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path
 	return validate_Object_Address(ctx, r, path)
 }
 
+// ValidateDeniedFields function return denied fields of objectAddress.
+func (o *Address) ValidateDeniedFields() map[string][]string {
+	return map[string][]string{
+		"PATCH": []string{"State"},
+		"PUT":   []string{"State"},
+		"POST":  []string{"State"},
+	}
+}
+
 func validate_required_Object_Address(ctx context.Context, v map[string]json.RawMessage, path string) error {
 	method := validate_runtime.HTTPMethodFromContext(ctx)
 	_ = method
@@ -411,8 +427,8 @@ func (o *Group) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path s
 	return validate_Object_Group(ctx, r, path)
 }
 
-// ValidateRequiredFileds function return required fields of objectGroup.
-func (o *Group) ValidateRequiredFileds() map[string][]string {
+// ValidateRequiredFields function return required fields of objectGroup.
+func (o *Group) ValidateRequiredFields() map[string][]string {
 	return map[string][]string{
 		"PATCH": []string{"Id"},
 		"PUT":   []string{"Id"},
@@ -696,6 +712,14 @@ func (o *Profile) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path
 		}
 	}
 	return validate_Object_Profile(ctx, r, path)
+}
+
+// ValidateDeniedFields function return denied fields of objectProfile.
+func (o *Profile) ValidateDeniedFields() map[string][]string {
+	return map[string][]string{
+		"PATCH": []string{"Name"},
+		"PUT":   []string{"Name"},
+	}
 }
 
 func validate_required_Object_Profile(ctx context.Context, v map[string]json.RawMessage, path string) error {
