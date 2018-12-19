@@ -248,9 +248,9 @@ func (o *User) ValidateDeniedFields() map[string][]string {
 // ValidateRequiredFields function return required fields of objectUser.
 func (o *User) ValidateRequiredFields() map[string][]string {
 	return map[string][]string{
+		"PATCH": []string{"Name"},
 		"POST":  []string{"Name"},
 		"PUT":   []string{"Name"},
-		"PATCH": []string{"Name"},
 	}
 }
 
@@ -339,7 +339,7 @@ func validate_Object_Address(ctx context.Context, r json.RawMessage, path string
 		case "country":
 		case "state":
 			method := validate_runtime.HTTPMethodFromContext(ctx)
-			if method == "PATCH" || method == "PUT" || method == "POST" {
+			if method == "PATCH" || method == "POST" || method == "PUT" {
 				return fmt.Errorf("field %q is unsupported for %q operation.", k, method)
 			}
 		case "city":
@@ -370,8 +370,8 @@ func (o *Address) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path
 func (o *Address) ValidateDeniedFields() map[string][]string {
 	return map[string][]string{
 		"PATCH": []string{"State"},
-		"PUT":   []string{"State"},
 		"POST":  []string{"State"},
+		"PUT":   []string{"State"},
 	}
 }
 

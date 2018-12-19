@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -386,6 +387,7 @@ func (p *Plugin) GetDeniedMethods(options []av_opts.AtlasValidateFieldOption_Ope
 		uniqueMethods = append(uniqueMethods, m)
 	}
 
+	sort.Strings(uniqueMethods)
 	return uniqueMethods
 }
 
@@ -408,6 +410,7 @@ func (p *Plugin) GetRequiredMethods(options []av_opts.AtlasValidateFieldOption_O
 		uniqueMethods = append(uniqueMethods, m)
 	}
 
+	sort.Strings(uniqueMethods)
 	return uniqueMethods
 }
 
