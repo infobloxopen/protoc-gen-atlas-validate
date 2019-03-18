@@ -79,6 +79,14 @@ protoc -I/usr/local/include \
 The following will generate pb.atlas.validate.go file that contains validation
 logic and MetadataAnnotator that you will have to include in GRPC Server options.
 
+### Multiple Files Support
+
+You can specify more than one file belonging to the same package. In this case
+plugin will generate validate_Object_ and validate_service_rpc_ in appropriate files
+with one difference that annotator and validate_Patterns are rendered either in a last
+output file or in file which name matches current package name (NOTE that you cannot
+specify files from different packages).
+
 ### Usage
 
 Import atlas-validate Interceptor:
