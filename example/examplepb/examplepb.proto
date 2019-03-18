@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+package examplepb;
+
+option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/examplepb;examplepb";
