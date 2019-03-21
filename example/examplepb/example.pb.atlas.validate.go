@@ -3,10 +3,10 @@
 
 package examplepb // import "github.com/infobloxopen/protoc-gen-atlas-validate/example/examplepb"
 
-import json "encoding/json"
 import context "context"
 import fmt "fmt"
-import runtime "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
+import json "encoding/json"
+import runtime1 "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
 import external "github.com/infobloxopen/protoc-gen-atlas-validate/example/external"
 import proto "github.com/gogo/protobuf/proto"
 import math "math"
@@ -132,7 +132,7 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_User(ctx, v, path); err != nil {
 		return err
@@ -141,7 +141,7 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 	for k, _ := range v {
 		switch k {
 		case "id":
-			method := runtime.HTTPMethodFromContext(ctx)
+			method := runtime1.HTTPMethodFromContext(ctx)
 			if method == "POST" {
 				return fmt.Errorf("field %q is unsupported for %q operation.", k, method)
 			}
@@ -151,7 +151,7 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 				continue
 			}
 			vv := v[k]
-			vvPath := runtime.JoinPath(path, k)
+			vvPath := runtime1.JoinPath(path, k)
 			if err = validate_Object_Profile(ctx, vv, vvPath); err != nil {
 				return err
 			}
@@ -160,7 +160,7 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 				continue
 			}
 			vv := v[k]
-			vvPath := runtime.JoinPath(path, k)
+			vvPath := runtime1.JoinPath(path, k)
 			if err = validate_Object_Address(ctx, vv, vvPath); err != nil {
 				return err
 			}
@@ -169,7 +169,7 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 				continue
 			}
 			var vArr []json.RawMessage
-			vArrPath := runtime.JoinPath(path, k)
+			vArrPath := runtime1.JoinPath(path, k)
 			if err = json.Unmarshal(v[k], &vArr); err != nil {
 				return fmt.Errorf("invalid value for %q: expected array.", vArrPath)
 			}
@@ -184,7 +184,7 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 				continue
 			}
 			var vArr []json.RawMessage
-			vArrPath := runtime.JoinPath(path, k)
+			vArrPath := runtime1.JoinPath(path, k)
 			if err = json.Unmarshal(v[k], &vArr); err != nil {
 				return fmt.Errorf("invalid value for %q: expected array.", vArrPath)
 			}
@@ -199,7 +199,7 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 				continue
 			}
 			vv := v[k]
-			vvPath := runtime.JoinPath(path, k)
+			vvPath := runtime1.JoinPath(path, k)
 			validator, ok := interface{}(&external.ExternalUser{}).(interface {
 				AtlasValidateJSON(context.Context, json.RawMessage, string) error
 			})
@@ -211,7 +211,7 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 			}
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -231,10 +231,10 @@ func (_ *User) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path st
 }
 
 func validate_required_Object_User(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	if _, ok := v["name"]; !ok {
-		path = runtime.JoinPath(path, "name")
+		path = runtime1.JoinPath(path, "name")
 		return fmt.Errorf("field %q is required for %q operation.", path, method)
 	}
 	return nil
@@ -253,7 +253,7 @@ func validate_Object_User_Parent(ctx context.Context, r json.RawMessage, path st
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_User_Parent(ctx, v, path); err != nil {
 		return err
@@ -264,7 +264,7 @@ func validate_Object_User_Parent(ctx context.Context, r json.RawMessage, path st
 		case "name":
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -284,7 +284,7 @@ func (_ *User_Parent) AtlasValidateJSON(ctx context.Context, r json.RawMessage, 
 }
 
 func validate_required_Object_User_Parent(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }
@@ -302,7 +302,7 @@ func validate_Object_Address(ctx context.Context, r json.RawMessage, path string
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_Address(ctx, v, path); err != nil {
 		return err
@@ -312,7 +312,7 @@ func validate_Object_Address(ctx context.Context, r json.RawMessage, path string
 		switch k {
 		case "country":
 		case "state":
-			method := runtime.HTTPMethodFromContext(ctx)
+			method := runtime1.HTTPMethodFromContext(ctx)
 			if method == "PATCH" || method == "POST" || method == "PUT" {
 				return fmt.Errorf("field %q is unsupported for %q operation.", k, method)
 			}
@@ -321,7 +321,7 @@ func validate_Object_Address(ctx context.Context, r json.RawMessage, path string
 		case "tags":
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -341,7 +341,7 @@ func (_ *Address) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path
 }
 
 func validate_required_Object_Address(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }
@@ -359,7 +359,7 @@ func validate_Object_Group(ctx context.Context, r json.RawMessage, path string) 
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_Group(ctx, v, path); err != nil {
 		return err
@@ -372,7 +372,7 @@ func validate_Object_Group(ctx context.Context, r json.RawMessage, path string) 
 		case "notes":
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -392,14 +392,14 @@ func (_ *Group) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path s
 }
 
 func validate_required_Object_Group(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	if _, ok := v["id"]; !ok && (method == "PATCH" || method == "PUT") {
-		path = runtime.JoinPath(path, "id")
+		path = runtime1.JoinPath(path, "id")
 		return fmt.Errorf("field %q is required for %q operation.", path, method)
 	}
 	if _, ok := v["name"]; !ok && (method == "POST") {
-		path = runtime.JoinPath(path, "name")
+		path = runtime1.JoinPath(path, "name")
 		return fmt.Errorf("field %q is required for %q operation.", path, method)
 	}
 	return nil
@@ -418,7 +418,7 @@ func validate_Object_CreateUserRequest(ctx context.Context, r json.RawMessage, p
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_CreateUserRequest(ctx, v, path); err != nil {
 		return err
@@ -431,13 +431,13 @@ func validate_Object_CreateUserRequest(ctx context.Context, r json.RawMessage, p
 				continue
 			}
 			vv := v[k]
-			vvPath := runtime.JoinPath(path, k)
+			vvPath := runtime1.JoinPath(path, k)
 			if err = validate_Object_User(ctx, vv, vvPath); err != nil {
 				return err
 			}
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -457,7 +457,7 @@ func (_ *CreateUserRequest) AtlasValidateJSON(ctx context.Context, r json.RawMes
 }
 
 func validate_required_Object_CreateUserRequest(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }
@@ -475,7 +475,7 @@ func validate_Object_UpdateUserRequest(ctx context.Context, r json.RawMessage, p
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_UpdateUserRequest(ctx, v, path); err != nil {
 		return err
@@ -488,13 +488,13 @@ func validate_Object_UpdateUserRequest(ctx context.Context, r json.RawMessage, p
 				continue
 			}
 			vv := v[k]
-			vvPath := runtime.JoinPath(path, k)
+			vvPath := runtime1.JoinPath(path, k)
 			if err = validate_Object_User(ctx, vv, vvPath); err != nil {
 				return err
 			}
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -514,7 +514,7 @@ func (_ *UpdateUserRequest) AtlasValidateJSON(ctx context.Context, r json.RawMes
 }
 
 func validate_required_Object_UpdateUserRequest(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }
@@ -532,7 +532,7 @@ func validate_Object_EmptyRequest(ctx context.Context, r json.RawMessage, path s
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_EmptyRequest(ctx, v, path); err != nil {
 		return err
@@ -542,7 +542,7 @@ func validate_Object_EmptyRequest(ctx context.Context, r json.RawMessage, path s
 		switch k {
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -562,7 +562,7 @@ func (_ *EmptyRequest) AtlasValidateJSON(ctx context.Context, r json.RawMessage,
 }
 
 func validate_required_Object_EmptyRequest(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }
@@ -580,7 +580,7 @@ func validate_Object_EmptyResponse(ctx context.Context, r json.RawMessage, path 
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_EmptyResponse(ctx, v, path); err != nil {
 		return err
@@ -590,7 +590,7 @@ func validate_Object_EmptyResponse(ctx context.Context, r json.RawMessage, path 
 		switch k {
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -610,7 +610,7 @@ func (_ *EmptyResponse) AtlasValidateJSON(ctx context.Context, r json.RawMessage
 }
 
 func validate_required_Object_EmptyResponse(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }
@@ -628,7 +628,7 @@ func validate_Object_Profile(ctx context.Context, r json.RawMessage, path string
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_Profile(ctx, v, path); err != nil {
 		return err
@@ -638,14 +638,14 @@ func validate_Object_Profile(ctx context.Context, r json.RawMessage, path string
 		switch k {
 		case "id":
 		case "name":
-			method := runtime.HTTPMethodFromContext(ctx)
+			method := runtime1.HTTPMethodFromContext(ctx)
 			if method == "PATCH" || method == "PUT" {
 				return fmt.Errorf("field %q is unsupported for %q operation.", k, method)
 			}
 		case "notes":
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -665,7 +665,7 @@ func (_ *Profile) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path
 }
 
 func validate_required_Object_Profile(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }
@@ -683,7 +683,7 @@ func validate_Object_UpdateProfileRequest(ctx context.Context, r json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_UpdateProfileRequest(ctx, v, path); err != nil {
 		return err
@@ -696,13 +696,13 @@ func validate_Object_UpdateProfileRequest(ctx context.Context, r json.RawMessage
 				continue
 			}
 			vv := v[k]
-			vvPath := runtime.JoinPath(path, k)
+			vvPath := runtime1.JoinPath(path, k)
 			if err = validate_Object_Profile(ctx, vv, vvPath); err != nil {
 				return err
 			}
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -722,7 +722,7 @@ func (_ *UpdateProfileRequest) AtlasValidateJSON(ctx context.Context, r json.Raw
 }
 
 func validate_required_Object_UpdateProfileRequest(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }

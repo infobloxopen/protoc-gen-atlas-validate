@@ -3,15 +3,15 @@
 
 package external // import "github.com/infobloxopen/protoc-gen-atlas-validate/example/external"
 
-import http "net/http"
-import json "encoding/json"
+import bytes "bytes"
 import context "context"
 import fmt "fmt"
+import http "net/http"
 import ioutil "io/ioutil"
+import json "encoding/json"
 import metadata "google.golang.org/grpc/metadata"
-import bytes "bytes"
-import runtime "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
-import runtime1 "github.com/grpc-ecosystem/grpc-gateway/runtime"
+import runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+import runtime1 "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
 import proto "github.com/gogo/protobuf/proto"
 import math "math"
 import _ "github.com/infobloxopen/protoc-gen-atlas-validate/options"
@@ -35,7 +35,7 @@ func validate_Object_ExternalUser(ctx context.Context, r json.RawMessage, path s
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_ExternalUser(ctx, v, path); err != nil {
 		return err
@@ -50,13 +50,13 @@ func validate_Object_ExternalUser(ctx context.Context, r json.RawMessage, path s
 				continue
 			}
 			vv := v[k]
-			vvPath := runtime.JoinPath(path, k)
+			vvPath := runtime1.JoinPath(path, k)
 			if err = validate_Object_ExternalAddress(ctx, vv, vvPath); err != nil {
 				return err
 			}
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -76,7 +76,7 @@ func (_ *ExternalUser) AtlasValidateJSON(ctx context.Context, r json.RawMessage,
 }
 
 func validate_required_Object_ExternalUser(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }
@@ -94,7 +94,7 @@ func validate_Object_ExternalUser_Parent(ctx context.Context, r json.RawMessage,
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_ExternalUser_Parent(ctx, v, path); err != nil {
 		return err
@@ -105,7 +105,7 @@ func validate_Object_ExternalUser_Parent(ctx context.Context, r json.RawMessage,
 		case "name":
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -125,7 +125,7 @@ func (_ *ExternalUser_Parent) AtlasValidateJSON(ctx context.Context, r json.RawM
 }
 
 func validate_required_Object_ExternalUser_Parent(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }
@@ -143,7 +143,7 @@ func validate_Object_ExternalAddress(ctx context.Context, r json.RawMessage, pat
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime.AllowUnknownFromContext(ctx)
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_ExternalAddress(ctx, v, path); err != nil {
 		return err
@@ -157,7 +157,7 @@ func validate_Object_ExternalAddress(ctx context.Context, r json.RawMessage, pat
 		case "zip":
 		default:
 			if !allowUnknown {
-				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))
+				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))
 			}
 		}
 	}
@@ -177,13 +177,13 @@ func (_ *ExternalAddress) AtlasValidateJSON(ctx context.Context, r json.RawMessa
 }
 
 func validate_required_Object_ExternalAddress(ctx context.Context, v map[string]json.RawMessage, path string) error {
-	method := runtime.HTTPMethodFromContext(ctx)
+	method := runtime1.HTTPMethodFromContext(ctx)
 	_ = method
 	return nil
 }
 
 var validate_Patterns = []struct {
-	pattern    runtime1.Pattern
+	pattern    runtime.Pattern
 	httpMethod string
 	validator  func(context.Context, json.RawMessage) error
 	// Included for introspection purpose.
@@ -198,7 +198,7 @@ var validate_Patterns = []struct {
 func AtlasValidateAnnotator(ctx context.Context, r *http.Request) metadata.MD {
 	md := make(metadata.MD)
 	for _, v := range validate_Patterns {
-		if r.Method == v.httpMethod && runtime.PatternMatch(v.pattern, r.URL.Path) {
+		if r.Method == v.httpMethod && runtime1.PatternMatch(v.pattern, r.URL.Path) {
 			var b []byte
 			var err error
 			if b, err = ioutil.ReadAll(r.Body); err != nil {
@@ -206,7 +206,7 @@ func AtlasValidateAnnotator(ctx context.Context, r *http.Request) metadata.MD {
 				return md
 			}
 			r.Body = ioutil.NopCloser(bytes.NewReader(b))
-			ctx := context.WithValue(context.WithValue(context.Background(), runtime.HTTPMethodContextKey, r.Method), runtime.AllowUnknownContextKey, v.allowUnknown)
+			ctx := context.WithValue(context.WithValue(context.Background(), runtime1.HTTPMethodContextKey, r.Method), runtime1.AllowUnknownContextKey, v.allowUnknown)
 			if err = v.validator(ctx, b); err != nil {
 				md.Set("Atlas-Validation-Error", err.Error())
 			}

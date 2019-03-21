@@ -16,11 +16,9 @@ import (
 const (
 	// PluginName is name of the plugin specified for protoc
 	PluginName = "atlas-validate"
-
 )
 
 type Plugin struct {
-
 	*generator.Generator
 	*pluginImports
 
@@ -31,7 +29,6 @@ type Plugin struct {
 
 	annotatorOnce sync.Once
 }
-
 
 func (p *Plugin) Name() string {
 	return PluginName
@@ -148,9 +145,9 @@ func (p *Plugin) gatherMethods(f *descriptor.FileDescriptorProto) []*methodDescr
 func (p *Plugin) renderMethodDescriptors() {
 
 	var (
-		jsonPkg      = p.NewImport(jsonPkgPath)
-		ctxPkg       = p.NewImport(ctxPkgPath)
-		gwruntimePkg = p.NewImport(gwruntimePkgPath)
+		jsonPkg      = p.Import(jsonPkgPath)
+		ctxPkg       = p.Import(ctxPkgPath)
+		gwruntimePkg = p.Import(gwruntimePkgPath)
 	)
 
 	p.P(`var validate_Patterns = []struct{`)
@@ -182,9 +179,9 @@ func (p *Plugin) renderMethodDescriptors() {
 func (p *Plugin) renderValidatorMethods() {
 
 	var (
-		fmtPkg  = p.NewImport(fmtPkgPath)
-		jsonPkg = p.NewImport(jsonPkgPath)
-		ctxPkg  = p.NewImport(ctxPkgPath)
+		fmtPkg  = p.Import(fmtPkgPath)
+		jsonPkg = p.Import(jsonPkgPath)
+		ctxPkg  = p.Import(ctxPkgPath)
 	)
 
 	for _, m := range p.methods[p.file.GetName()] {
@@ -260,10 +257,10 @@ func (p *Plugin) renderValidatorObjectMethods() {
 func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t string) {
 
 	var (
-		jsonPkg    = p.NewImport(jsonPkgPath)
-		fmtPkg     = p.NewImport(fmtPkgPath)
-		ctxPkg     = p.NewImport(ctxPkgPath)
-		runtimePkg = p.NewImport(runtimePkgPath)
+		jsonPkg    = p.Import(jsonPkgPath)
+		fmtPkg     = p.Import(fmtPkgPath)
+		ctxPkg     = p.Import(ctxPkgPath)
+		runtimePkg = p.Import(runtimePkgPath)
 	)
 
 	p.P(`// validate_Object_`, t, ` function validates a JSON for a given object.`)
@@ -389,8 +386,8 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 func (p *Plugin) generateAtlasValidateJSONInterfaceSignature(t string) string {
 
 	var (
-		jsonPkg = p.NewImport(jsonPkgPath)
-		ctxPkg  = p.NewImport(ctxPkgPath)
+		jsonPkg = p.Import(jsonPkgPath)
+		ctxPkg  = p.Import(ctxPkgPath)
 	)
 
 	return fmt.Sprintf(`interface{}(&%s{}).(interface{ AtlasValidateJSON(%s.Context, %s.RawMessage, string) error })`, t, ctxPkg.Use(), jsonPkg.Use())
@@ -399,8 +396,8 @@ func (p *Plugin) generateAtlasValidateJSONInterfaceSignature(t string) string {
 func (p *Plugin) generateAtlasJSONValidateInterfaceSignature(t string) string {
 
 	var (
-		jsonPkg = p.NewImport(jsonPkgPath)
-		ctxPkg  = p.NewImport(ctxPkgPath)
+		jsonPkg = p.Import(jsonPkgPath)
+		ctxPkg  = p.Import(ctxPkgPath)
 	)
 
 	return fmt.Sprintf(`interface{}(&%s{}).(interface { AtlasJSONValidate(%s.Context, %s.RawMessage, string) (%s.RawMessage, error) })`, t, ctxPkg.Use(), jsonPkg.Use(), jsonPkg.Use())
@@ -410,12 +407,12 @@ func (p *Plugin) generateAtlasJSONValidateInterfaceSignature(t string) string {
 func (p *Plugin) renderAnnotator() {
 
 	var (
-		httpPkg     = p.NewImport(httpPkgPath)
-		ctxPkg      = p.NewImport(ctxPkgPath)
-		bytesPkg    = p.NewImport(bytesPkgPath)
-		ioutilPkg   = p.NewImport(ioutilPkgPath)
-		metadataPkg = p.NewImport(metadataPkgPath)
-		runtimePkg  = p.NewImport(runtimePkgPath)
+		httpPkg     = p.Import(httpPkgPath)
+		ctxPkg      = p.Import(ctxPkgPath)
+		bytesPkg    = p.Import(bytesPkgPath)
+		ioutilPkg   = p.Import(ioutilPkgPath)
+		metadataPkg = p.Import(metadataPkgPath)
+		runtimePkg  = p.Import(runtimePkgPath)
 	)
 
 	p.P(`// AtlasValidateAnnotator parses JSON input and validates unknown fields`)
@@ -493,10 +490,10 @@ func (p *Plugin) GetRequiredMethods(options []av_opts.AtlasValidateFieldOption_O
 func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t string) {
 
 	var (
-		fmtPkg     = p.NewImport(fmtPkgPath)
-		ctxPkg     = p.NewImport(ctxPkgPath)
-		jsonPkg    = p.NewImport(jsonPkgPath)
-		runtimePkg = p.NewImport(runtimePkgPath)
+		fmtPkg     = p.Import(fmtPkgPath)
+		ctxPkg     = p.Import(ctxPkgPath)
+		jsonPkg    = p.Import(jsonPkgPath)
+		runtimePkg = p.Import(runtimePkgPath)
 	)
 
 	requiredFields := make(map[string][]string)

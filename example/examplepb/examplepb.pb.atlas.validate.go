@@ -3,14 +3,14 @@
 
 package examplepb // import "github.com/infobloxopen/protoc-gen-atlas-validate/example/examplepb"
 
-import http "net/http"
-import json "encoding/json"
-import context "context"
-import ioutil "io/ioutil"
-import metadata "google.golang.org/grpc/metadata"
 import bytes "bytes"
-import runtime "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
-import runtime1 "github.com/grpc-ecosystem/grpc-gateway/runtime"
+import context "context"
+import http "net/http"
+import ioutil "io/ioutil"
+import json "encoding/json"
+import metadata "google.golang.org/grpc/metadata"
+import runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+import runtime1 "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -21,7 +21,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 var validate_Patterns = []struct {
-	pattern    runtime1.Pattern
+	pattern    runtime.Pattern
 	httpMethod string
 	validator  func(context.Context, json.RawMessage) error
 	// Included for introspection purpose.
@@ -123,7 +123,7 @@ var validate_Patterns = []struct {
 func AtlasValidateAnnotator(ctx context.Context, r *http.Request) metadata.MD {
 	md := make(metadata.MD)
 	for _, v := range validate_Patterns {
-		if r.Method == v.httpMethod && runtime.PatternMatch(v.pattern, r.URL.Path) {
+		if r.Method == v.httpMethod && runtime1.PatternMatch(v.pattern, r.URL.Path) {
 			var b []byte
 			var err error
 			if b, err = ioutil.ReadAll(r.Body); err != nil {
@@ -131,7 +131,7 @@ func AtlasValidateAnnotator(ctx context.Context, r *http.Request) metadata.MD {
 				return md
 			}
 			r.Body = ioutil.NopCloser(bytes.NewReader(b))
-			ctx := context.WithValue(context.WithValue(context.Background(), runtime.HTTPMethodContextKey, r.Method), runtime.AllowUnknownContextKey, v.allowUnknown)
+			ctx := context.WithValue(context.WithValue(context.Background(), runtime1.HTTPMethodContextKey, r.Method), runtime1.AllowUnknownContextKey, v.allowUnknown)
 			if err = v.validator(ctx, b); err != nil {
 				md.Set("Atlas-Validation-Error", err.Error())
 			}
