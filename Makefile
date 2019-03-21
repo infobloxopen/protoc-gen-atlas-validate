@@ -38,24 +38,26 @@ gentool:
 	docker image prune -f --filter label=stage=server-intermediate
 
 gentool-examples: gentool
-	     $(GENERATOR) \
+	$(GENERATOR) \
 		-I/go/src/github.com/infobloxopen/protoc-gen-atlas-validate \
-                --go_out="plugins=grpc:$(DOCKERPATH)" \
+		--go_out="plugins=grpc:$(DOCKERPATH)" \
 		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
-                --atlas-validate_out="$(DOCKERPATH)" \
-                        example/examplepb/example.proto
+		--atlas-validate_out="$(DOCKERPATH)" \
+		example/examplepb/example.proto \
+		example/examplepb/examplepb.proto \
+		example/examplepb/example_multi.proto
 
-	    $(GENERATOR) \
+	$(GENERATOR) \
 		-I/go/src/github.com/infobloxopen/protoc-gen-atlas-validate \
-                --go_out="plugins=grpc:$(DOCKERPATH)" \
+		--go_out="plugins=grpc:$(DOCKERPATH)" \
 		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
-                --atlas-validate_out="$(DOCKERPATH)" \
-                        example/external/external.proto
+		--atlas-validate_out="$(DOCKERPATH)" \
+			example/external/external.proto
 
 gentool-options:
 	$(GENERATOR) \
-                --gogo_out="Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:$(DOCKERPATH)" \
-                	$(PROJECT_ROOT)/options/atlas_validate.proto
+		--gogo_out="Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:$(DOCKERPATH)" \
+		$(PROJECT_ROOT)/options/atlas_validate.proto
 
 test: gentool-examples
 	go test -v -cover ./example/examplepb

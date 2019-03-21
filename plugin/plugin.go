@@ -2,7 +2,9 @@ package plugin
 
 import (
 	"fmt"
+	"sort"
 	"strings"
+	"sync"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
@@ -18,9 +20,14 @@ const (
 
 type Plugin struct {
 	*generator.Generator
+	*pluginImports
+
 	file    *generator.FileDescriptor
-	imports []string
-	methods []methodDescriptor
+	methods map[string][]*methodDescriptor
+	imports map[string]*importPkg
+	fcount  int
+
+	annotatorOnce sync.Once
 }
 
 func (p *Plugin) Name() string {
@@ -29,37 +36,45 @@ func (p *Plugin) Name() string {
 
 func (p *Plugin) Init(g *generator.Generator) {
 	p.Generator = g
-	p.methods = []methodDescriptor{}
-	p.imports = []string{}
+
+	p.methods = make(map[string][]*methodDescriptor)
+	for _, f := range p.Generator.Request.ProtoFile {
+		for _, fg := range p.Generator.Request.FileToGenerate {
+			if f.GetName() == fg {
+				p.methods[f.GetName()] = p.gatherMethods(f)
+				p.fcount++
+			}
+		}
+	}
+
 }
 
 func (p *Plugin) GenerateImports(file *generator.FileDescriptor) {
-	p.PrintImport("fmt", "fmt")
-	p.PrintImport("http", "net/http")
-	p.PrintImport("json", "encoding/json")
-	p.PrintImport("ioutil", "io/ioutil")
-	p.PrintImport("bytes", "bytes")
-	p.PrintImport("context", "golang.org/x/net/context")
-	p.PrintImport("metadata", "google.golang.org/grpc/metadata")
-	p.PrintImport("runtime", "github.com/grpc-ecosystem/grpc-gateway/runtime")
-	p.PrintImport("validate_runtime", "github.com/infobloxopen/protoc-gen-atlas-validate/runtime")
-
-	for i, v := range p.imports {
-		n := fmt.Sprintf("google_protobuf%d", i+1)
-		p.PrintImport(generator.GoPackageName(n), generator.GoImportPath(v))
+	if p.pluginImports != nil {
+		p.pluginImports.GenerateImports(file)
 	}
 }
 
 func (p *Plugin) Generate(file *generator.FileDescriptor) {
-	p.file = file
-	p.Init(p.Generator)
+	if _, ok := p.methods[file.GetName()]; !ok {
+		return
+	}
 
-	p.gatherMethods()
+	p.fcount--
+
+	p.file = file
+
+	p.initPluginImports(p.Generator)
 
 	p.renderValidatorMethods()
 	p.renderValidatorObjectMethods()
-	p.renderMethodDescriptors()
-	p.renderAnnotator()
+
+	if p.fcount == 0 || strings.HasSuffix(file.GetName(), file.GetPackage()+".proto") {
+		p.annotatorOnce.Do(func() {
+			p.renderMethodDescriptors()
+			p.renderAnnotator()
+		})
+	}
 }
 
 // getAllowUnknown function picks up correct allowUnknown option from file/service/method
@@ -95,59 +110,65 @@ type methodDescriptor struct {
 	idx                  int
 	httpBody, httpMethod string
 	gwPattern            string
-	protoInputType       string
 	allowUnknown         bool
 	inputType            string
 }
 
 // gatherMethods function walks through services and methods and extracts
 // google.api.http options and renders different handlers for HTTP request/pattern pair.
-func (p *Plugin) gatherMethods() {
-	for _, svc := range p.file.GetService() {
+func (p *Plugin) gatherMethods(f *descriptor.FileDescriptorProto) []*methodDescriptor {
+
+	var methods []*methodDescriptor
+
+	for _, svc := range f.GetService() {
 		for _, method := range svc.GetMethod() {
 			for i, opt := range extractHTTPOpts(method) {
-				p.methods = append(p.methods, methodDescriptor{
-					svc:            svc.GetName(),
-					method:         method.GetName(),
-					idx:            i,
-					httpBody:       opt.body,
-					httpMethod:     opt.method,
-					gwPattern:      fmt.Sprintf("%s_%s_%d", svc.GetName(), method.GetName(), i),
-					protoInputType: p.getProtoType(method.GetInputType()),
-					inputType:      method.GetInputType(),
-					allowUnknown:   p.getAllowUnknown(p.file.Options, svc.Options, method.Options),
+				methods = append(methods, &methodDescriptor{
+					svc:          svc.GetName(),
+					method:       method.GetName(),
+					idx:          i,
+					httpBody:     opt.body,
+					httpMethod:   opt.method,
+					gwPattern:    fmt.Sprintf("%s_%s_%d", svc.GetName(), method.GetName(), i),
+					inputType:    method.GetInputType(),
+					allowUnknown: p.getAllowUnknown(f.Options, svc.Options, method.Options),
 				})
 			}
 		}
 	}
-}
 
-func (p *Plugin) pkgPrefix() string {
-	return "." + p.file.GetPackage() + "."
-}
-
-func (p *Plugin) trimPkgPrefix(t string) string {
-	return strings.TrimPrefix(t, p.pkgPrefix())
+	return methods
 }
 
 // renderMethodDescriptors renders array of structs that are used to trigger validation
 // function on correct HTTP request according to HTTP method and grpc-gateway/runtime.Pattern.
 func (p *Plugin) renderMethodDescriptors() {
+
+	var (
+		jsonPkg      = p.Import(jsonPkgPath)
+		ctxPkg       = p.Import(ctxPkgPath)
+		gwruntimePkg = p.Import(gwruntimePkgPath)
+	)
+
 	p.P(`var validate_Patterns = []struct{`)
-	p.P(`pattern runtime.Pattern`)
+	p.P(`pattern `, gwruntimePkg.Use(), `.Pattern`)
 	p.P(`httpMethod string`)
-	p.P(`validator func(context.Context, json.RawMessage) error`)
+	p.P(`validator func(`, ctxPkg.Use(), `.Context, `, jsonPkg.Use(), `.RawMessage) error`)
 	p.P(`// Included for introspection purpose.`)
 	p.P(`allowUnknown bool`)
 	p.P(`} {`)
-	for _, m := range p.methods {
-		p.P(`{`)
-		// NOTE: pattern reiles on code generated by protoc-gen-grpc-gateway.
-		p.P(`pattern: `, "pattern_"+m.gwPattern, `,`)
-		p.P(`httpMethod: "`, m.httpMethod, `",`)
-		p.P(`validator: `, "validate_"+m.gwPattern, `,`)
-		p.P(`allowUnknown: `, m.allowUnknown, `,`)
-		p.P(`},`)
+	for f, methods := range p.methods {
+		p.P(`// patterns for file `, f)
+		for _, m := range methods {
+			p.P(`{`)
+			// NOTE: pattern reiles on code generated by protoc-gen-grpc-gateway.
+			p.P(`pattern: `, "pattern_"+m.gwPattern, `,`)
+			p.P(`httpMethod: "`, m.httpMethod, `",`)
+			p.P(`validator: `, "validate_"+m.gwPattern, `,`)
+			p.P(`allowUnknown: `, m.allowUnknown, `,`)
+			p.P(`},`)
+		}
+		p.P()
 	}
 	p.P(`}`)
 	p.P()
@@ -156,41 +177,53 @@ func (p *Plugin) renderMethodDescriptors() {
 // renderValidatorMethods function generates entrypoints for validator one per each
 // HTTP request (and HTTP request additional_bindings).
 func (p *Plugin) renderValidatorMethods() {
-	for _, m := range p.methods {
+
+	var (
+		fmtPkg  = p.Import(fmtPkgPath)
+		jsonPkg = p.Import(jsonPkgPath)
+		ctxPkg  = p.Import(ctxPkgPath)
+	)
+
+	for _, m := range p.methods[p.file.GetName()] {
 		p.P(`// validate_`, m.gwPattern, ` is an entrypoint for validating "`, m.httpMethod, `" HTTP request `)
 		p.P(`// that match *.pb.gw.go/pattern_`, m.gwPattern, `.`)
-		p.P(`func validate_`, m.gwPattern, `(ctx context.Context, r json.RawMessage) (err error) {`)
+		p.P(`func validate_`, m.gwPattern, `(ctx `, ctxPkg.Use(), `.Context, r `, jsonPkg.Use(), `.RawMessage) (err error) {`)
+
+		o := p.objectNamed(m.inputType)
+		t := p.TypeName(o)
+
 		switch m.httpBody {
 		case "":
+
 			p.P(`if len(r) != 0 {`)
-			p.P(`return fmt.Errorf("body is not allowed")`)
+			p.P(`return `, fmtPkg.Use(), `.Errorf("body is not allowed")`)
 			p.P(`}`)
 			p.P(`return nil`)
+
 		case "*":
-			if m.protoInputType != "" {
-				p.P(`return validate_Object_`, p.getGoType(m.protoInputType), `(ctx, r, "")`)
+
+			if p.isLocal(o) {
+				p.P(`return validate_Object_`, t, `(ctx, r, "")`)
 			} else {
-				p.P(`obj := `, p.importedType(m.inputType), `{}`)
-				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(context.Context, json.RawMessage, string) error }); ok {`)
-				p.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
-				p.P(`}`)
-				p.P(`return nil`)
-			}
-		default:
-			msg := p.getMessage(m.inputType)
-			f := msg.GetFieldDescriptor(m.httpBody)
-			if p.getProtoType(f.GetTypeName()) != "" {
-				if gt := p.getGoType(f.GetTypeName()); gt != "" {
-					p.P(`return validate_Object_`, gt, `(ctx, r, "")`)
-				}
-			} else {
-				p.P(`obj := `, p.importedType(f.GetTypeName()), `{}`)
-				p.P(`if validator, ok := interface{}(obj).(interface{ AtlasValidateJSON(context.Context, json.RawMessage, string) error }); ok {`)
+				p.P(`if validator, ok := `, p.generateAtlasValidateJSONInterfaceSignature(t), `; ok {`)
 				p.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
 				p.P(`}`)
 				p.P(`return nil`)
 			}
 
+		default:
+
+			fo := p.objectFieldNamed(o, t, m.httpBody)
+			ft := p.TypeName(fo)
+
+			if p.isLocal(fo) {
+				p.P(`return validate_Object_`, ft, `(ctx, r, "")`)
+			} else {
+				p.P(`if validator, ok := `, p.generateAtlasValidateJSONInterfaceSignature(ft), `; ok {`)
+				p.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
+				p.P(`}`)
+				p.P(`return nil`)
+			}
 		}
 		p.P(`}`)
 		p.P()
@@ -198,36 +231,52 @@ func (p *Plugin) renderValidatorMethods() {
 }
 
 func (p *Plugin) renderValidatorObjectMethods() {
+
 	for _, o := range p.file.GetMessageType() {
-		otype := p.getGoType(o.GetName())
+
+		ptype := "." + p.file.GetPackage() + "." + o.GetName()
+		otype := p.TypeName(p.objectNamed(ptype))
+
 		p.renderValidatorObjectMethod(o, otype)
 		p.generateValidateRequired(o, otype)
+
 		for _, no := range o.GetNestedType() {
+
 			if no.GetOptions().GetMapEntry() {
 				continue
 			}
-			p.renderValidatorObjectMethod(no, otype+"_"+p.getGoType(no.GetName()))
-			p.generateValidateRequired(no, otype+"_"+p.getGoType(no.GetName()))
+
+			notype := p.TypeName(p.objectNamed(ptype + "." + no.GetName()))
+
+			p.renderValidatorObjectMethod(no, notype)
+			p.generateValidateRequired(no, notype)
 		}
 	}
 }
 
 func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t string) {
+
+	var (
+		jsonPkg    = p.Import(jsonPkgPath)
+		fmtPkg     = p.Import(fmtPkgPath)
+		ctxPkg     = p.Import(ctxPkgPath)
+		runtimePkg = p.Import(runtimePkgPath)
+	)
+
 	p.P(`// validate_Object_`, t, ` function validates a JSON for a given object.`)
-	p.P(`func validate_Object_`, t, `(ctx context.Context,r json.RawMessage, path string) (err error) {`)
-	p.P(`obj := &`, t, `{}`)
-	p.P(`if hook, ok := interface{}(obj).(interface { AtlasJSONValidate(context.Context, json.RawMessage, string) (json.RawMessage, error) }); ok {`)
+	p.P(`func validate_Object_`, t, `(ctx `, ctxPkg.Use(), `.Context, r `, jsonPkg.Use(), `.RawMessage, path string) (err error) {`)
+	p.P(`if hook, ok := `, p.generateAtlasJSONValidateInterfaceSignature(t), `; ok {`)
 	p.P(`if r, err = hook.AtlasJSONValidate(ctx, r, path); err != nil {`)
 	p.P(`return err`)
 	p.P(`}`)
 	p.P(`}`)
-	p.P(`var v map[string]json.RawMessage`)
-	p.P(`if err = json.Unmarshal(r, &v); err != nil {`)
-	p.P(`return fmt.Errorf("invalid value for %q: expected object.", path)`)
+	p.P(`var v map[string]`, jsonPkg.Use(), `.RawMessage`)
+	p.P(`if err = `, jsonPkg.Use(), `.Unmarshal(r, &v); err != nil {`)
+	p.P(`return `, fmtPkg.Use(), `.Errorf("invalid value for %q: expected object.", path)`)
 	p.P(`}`)
-	p.P(`allowUnknown := validate_runtime.AllowUnknownFromContext(ctx)`)
+	p.P(`allowUnknown := `, runtimePkg.Use(), `.AllowUnknownFromContext(ctx)`)
 	p.P()
-	p.P(fmt.Sprintf(`if err = validate_required_Object_%s(ctx, v, path); err != nil {`, t))
+	p.P(`if err = validate_required_Object_`, t, `(ctx, v, path); err != nil {`)
 	p.P(`return err`)
 	p.P(`}`)
 	p.P()
@@ -235,73 +284,86 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 
 	p.P(`switch k {`)
 	for _, f := range o.GetField() {
+
 		p.P(`case "`, f.GetName(), `":`)
-		gt := p.getGoType(f.GetTypeName())
+
 		if p.IsMap(f) {
 			continue
 		}
+
 		if fExt, err := proto.GetExtension(f.Options, av_opts.E_Field); err == nil && fExt != nil {
 			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
 			methods := p.GetDeniedMethods(favOpt.GetDeny())
 			if len(methods) != 0 {
-				p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
-				p.P(fmt.Sprintf(`if method == "%s" {`, strings.Join(methods, `" || method == "`)))
-				p.P(`return fmt.Errorf("field %q is unsupported for %q operation.", k, method)`)
+				cond := strings.Join(methods, `" || method == "`)
+				p.P(`method := `, runtimePkg.Use(), `.HTTPMethodFromContext(ctx)`)
+				p.P(`if method == "`, cond, `" {`)
+				p.P(`return `, fmtPkg.Use(), `.Errorf("field %q is unsupported for %q operation.", k, method)`)
 				p.P("}")
 			}
 		}
 
 		if f.IsMessage() && f.IsRepeated() {
+
+			fo := p.objectNamed(f.GetTypeName())
+			ft := p.TypeName(fo)
+
 			p.P(`if v[k] == nil {`)
 			p.P(`continue`)
 			p.P(`}`)
-			p.P(`var vArr []json.RawMessage`)
-			p.P(`vArrPath := validate_runtime.JoinPath(path, k)`)
-			p.P(`if err = json.Unmarshal(v[k], &vArr); err != nil {`)
-			p.P(`return fmt.Errorf("invalid value for %q: expected array.", vArrPath)`)
+			p.P(`var vArr []`, jsonPkg.Use(), `.RawMessage`)
+			p.P(`vArrPath := `, runtimePkg.Use(), `.JoinPath(path, k)`)
+			p.P(`if err = `, jsonPkg.Use(), `.Unmarshal(v[k], &vArr); err != nil {`)
+			p.P(`return `, fmtPkg.Use(), `.Errorf("invalid value for %q: expected array.", vArrPath)`)
 			p.P(`}`)
-			if gt == "" {
-				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(context.Context,json.RawMessage, string) error })`)
+			if !p.isLocal(fo) {
+				p.P(`validator, ok := `, p.generateAtlasValidateJSONInterfaceSignature(ft))
 				p.P(`if !ok {`)
 				p.P(`continue`)
 				p.P(`}`)
 			}
 			p.P(`for i, vv := range vArr {`)
-			p.P(`vvPath := fmt.Sprintf("%s.[%d]", vArrPath, i)`)
-			if gt == "" {
+			p.P(`vvPath := `, fmtPkg.Use(), `.Sprintf("%s.[%d]", vArrPath, i)`)
+			if !p.isLocal(fo) {
 				p.P(`if err = validator.AtlasValidateJSON(ctx, vv, vvPath); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			} else {
-				p.P(`if err = validate_Object_`, gt, `(ctx, vv, vvPath); err != nil {`)
+				p.P(`if err = validate_Object_`, ft, `(ctx, vv, vvPath); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			}
 			p.P(`}`)
+
 		} else if f.IsMessage() {
+
+			fo := p.objectNamed(f.GetTypeName())
+			ft := p.TypeName(fo)
+
 			p.P(`if v[k] == nil {`)
 			p.P(`continue`)
 			p.P(`}`)
 			p.P(`vv := v[k]`)
-			p.P(`vvPath := validate_runtime.JoinPath(path, k)`)
-			if gt == "" {
-				p.P(`validator, ok := interface{}(&`, p.importedType(f.GetTypeName()), `{}).(interface{ AtlasValidateJSON(context.Context, json.RawMessage, string) error })`)
+			p.P(`vvPath := `, runtimePkg.Use(), `.JoinPath(path, k)`)
+			if p.isLocal(fo) {
+				p.P(`if err = validate_Object_`, ft, `(ctx, vv, vvPath); err != nil {`)
+				p.P(`return err`)
+				p.P(`}`)
+			} else {
+				p.P(`validator, ok := `, p.generateAtlasValidateJSONInterfaceSignature(ft))
 				p.P(`if !ok {`)
 				p.P(`continue`)
 				p.P(`}`)
 				p.P(`if err = validator.AtlasValidateJSON(ctx, vv, vvPath); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
-			} else {
-				p.P(`if err = validate_Object_`, gt, `(ctx, vv, vvPath); err != nil {`)
-				p.P(`return err`)
-				p.P(`}`)
 			}
 		}
 	}
+
 	p.P(`default:`)
 	p.P(`if !allowUnknown {`)
-	p.P(`return fmt.Errorf("unknown field %q.", validate_runtime.JoinPath(path, k))`)
+	p.P(`return `, fmtPkg.Use(), `.Errorf("unknown field %q.", `, runtimePkg.Use(), `.JoinPath(path, k))`)
 	p.P(`}`)
 	p.P(`}`)
 	p.P(`}`)
@@ -310,8 +372,8 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P()
 
 	p.P(`// AtlasValidateJSON function validates a JSON for object `, t, `.`)
-	p.P(`func (o *`, t, `) AtlasValidateJSON(ctx context.Context, r json.RawMessage, path string) (err error) {`)
-	p.P(`if hook, ok := interface{}(o).(interface { AtlasJSONValidate(context.Context,json.RawMessage, string) (json.RawMessage, error) }); ok {`)
+	p.P(`func (_ *`, t, `) AtlasValidateJSON(ctx `, ctxPkg.Use(), `.Context, r `, jsonPkg.Use(), `.RawMessage, path string) (err error) {`)
+	p.P(`if hook, ok := `, p.generateAtlasJSONValidateInterfaceSignature(t), `; ok {`)
 	p.P(`if r, err = hook.AtlasJSONValidate(ctx, r, path); err != nil {`)
 	p.P(`return err`)
 	p.P(`}`)
@@ -321,22 +383,53 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P()
 }
 
+func (p *Plugin) generateAtlasValidateJSONInterfaceSignature(t string) string {
+
+	var (
+		jsonPkg = p.Import(jsonPkgPath)
+		ctxPkg  = p.Import(ctxPkgPath)
+	)
+
+	return fmt.Sprintf(`interface{}(&%s{}).(interface{ AtlasValidateJSON(%s.Context, %s.RawMessage, string) error })`, t, ctxPkg.Use(), jsonPkg.Use())
+}
+
+func (p *Plugin) generateAtlasJSONValidateInterfaceSignature(t string) string {
+
+	var (
+		jsonPkg = p.Import(jsonPkgPath)
+		ctxPkg  = p.Import(ctxPkgPath)
+	)
+
+	return fmt.Sprintf(`interface{}(&%s{}).(interface { AtlasJSONValidate(%s.Context, %s.RawMessage, string) (%s.RawMessage, error) })`, t, ctxPkg.Use(), jsonPkg.Use(), jsonPkg.Use())
+
+}
+
 func (p *Plugin) renderAnnotator() {
+
+	var (
+		httpPkg     = p.Import(httpPkgPath)
+		ctxPkg      = p.Import(ctxPkgPath)
+		bytesPkg    = p.Import(bytesPkgPath)
+		ioutilPkg   = p.Import(ioutilPkgPath)
+		metadataPkg = p.Import(metadataPkgPath)
+		runtimePkg  = p.Import(runtimePkgPath)
+	)
+
 	p.P(`// AtlasValidateAnnotator parses JSON input and validates unknown fields`)
 	p.P(`// based on 'allow_unknown_fields' options specified in proto file.`)
-	p.P(`func AtlasValidateAnnotator(ctx context.Context, r *http.Request) metadata.MD {`)
-	p.P(`md := make(metadata.MD)`)
+	p.P(`func AtlasValidateAnnotator(ctx `, ctxPkg.Use(), `.Context, r *`, httpPkg.Use(), `.Request) `, metadataPkg.Use(), `.MD {`)
+	p.P(`md := make(`, metadataPkg.Use(), `.MD)`)
 
 	p.P(`for _, v := range validate_Patterns {`)
-	p.P(`if r.Method == v.httpMethod && validate_runtime.PatternMatch(v.pattern, r.URL.Path) {`)
+	p.P(`if r.Method == v.httpMethod && `, runtimePkg.Use(), `.PatternMatch(v.pattern, r.URL.Path) {`)
 	p.P(`var b []byte`)
 	p.P(`var err error`)
-	p.P(`if b, err = ioutil.ReadAll(r.Body); err != nil {`)
+	p.P(`if b, err = `, ioutilPkg.Use(), `.ReadAll(r.Body); err != nil {`)
 	p.P(`md.Set("Atlas-Validation-Error", "invalid value: unable to parse body")`)
 	p.P(`return md`)
 	p.P(`}`)
-	p.P(`r.Body = ioutil.NopCloser(bytes.NewReader(b))`)
-	p.P(`ctx := context.WithValue(context.WithValue(context.Background(), validate_runtime.HTTPMethodContextKey, r.Method), validate_runtime.AllowUnknownContextKey, v.allowUnknown)`)
+	p.P(`r.Body = `, ioutilPkg.Use(), `.NopCloser(`, bytesPkg.Use(), `.NewReader(b))`)
+	p.P(`ctx := `, ctxPkg.Use(), `.WithValue(`, ctxPkg.Use(), `.WithValue(`, ctxPkg.Use(), `.Background(), `, runtimePkg.Use(), `.HTTPMethodContextKey, r.Method), `, runtimePkg.Use(), `.AllowUnknownContextKey, v.allowUnknown)`)
 	p.P(`if err = v.validator(ctx, b); err != nil {`)
 	p.P(`md.Set("Atlas-Validation-Error", err.Error())`)
 	p.P(`}`)
@@ -346,23 +439,6 @@ func (p *Plugin) renderAnnotator() {
 	p.P(`return md`)
 	p.P(`}`)
 	p.P()
-}
-
-func (p *Plugin) getMessage(t string) *descriptor.DescriptorProto {
-	var local bool
-
-	if strings.HasPrefix(t, p.pkgPrefix()) {
-		local = true
-	}
-
-	if msg := p.file.GetMessage(p.trimPkgPrefix(t)); msg == nil && local {
-		return nil
-	} else if msg != nil {
-		return msg
-	}
-
-	file := p.ObjectNamed(t).File()
-	return file.GetMessage(strings.TrimPrefix(t, "."+file.GetPackage()+"."))
 }
 
 //Return methods to which field marked as denied
@@ -384,6 +460,7 @@ func (p *Plugin) GetDeniedMethods(options []av_opts.AtlasValidateFieldOption_Ope
 		uniqueMethods = append(uniqueMethods, m)
 	}
 
+	sort.StringSlice(uniqueMethods).Sort()
 	return uniqueMethods
 }
 
@@ -406,10 +483,19 @@ func (p *Plugin) GetRequiredMethods(options []av_opts.AtlasValidateFieldOption_O
 		uniqueMethods = append(uniqueMethods, m)
 	}
 
+	sort.StringSlice(uniqueMethods).Sort()
 	return uniqueMethods
 }
 
 func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t string) {
+
+	var (
+		fmtPkg     = p.Import(fmtPkgPath)
+		ctxPkg     = p.Import(ctxPkgPath)
+		jsonPkg    = p.Import(jsonPkgPath)
+		runtimePkg = p.Import(runtimePkgPath)
+	)
+
 	requiredFields := make(map[string][]string)
 	for _, fd := range md.GetField() {
 		if fExt, err := proto.GetExtension(fd.Options, av_opts.E_Field); err == nil && fExt != nil {
@@ -422,20 +508,21 @@ func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t stri
 		}
 	}
 
-	p.P(fmt.Sprintf(`func validate_required_Object_%s(ctx context.Context, v map[string]json.RawMessage, path string) error {`, t))
-	p.P(`method := validate_runtime.HTTPMethodFromContext(ctx)`)
+	p.P(`func validate_required_Object_`, t, `(ctx `, ctxPkg.Use(), `.Context, v map[string]`, jsonPkg.Use(), `.RawMessage, path string) error {`)
+	p.P(`method := `, runtimePkg.Use(), `.HTTPMethodFromContext(ctx)`)
 	p.P(`_ = method`)
 
 	for fn, methods := range requiredFields {
 		if len(methods) == 3 {
-			p.P(fmt.Sprintf(`if _, ok := v["%s"]; !ok {`, fn))
-			p.P(fmt.Sprintf(`fieldPath := validate_runtime.JoinPath(path, "%s")`, fn))
-			p.P(`return fmt.Errorf("field %q is required for %q operation.", fieldPath, method)`)
+			p.P(`if _, ok := v["`, fn, `"]; !ok {`)
+			p.P(`path = `, runtimePkg.Use(), `.JoinPath(path, "`, fn, `")`)
+			p.P(`return `, fmtPkg.Use(), `.Errorf("field %q is required for %q operation.", path, method)`)
 			p.P(`}`)
 		} else {
-			p.P(fmt.Sprintf(`if _, ok := v["%s"]; !ok && (method == "%s"){`, fn, strings.Join(methods, `" || method == "`)))
-			p.P(fmt.Sprintf(`fieldPath := validate_runtime.JoinPath(path, "%s")`, fn))
-			p.P(`return fmt.Errorf("field %q is required for %q operation.", fieldPath, method)`)
+			cond := strings.Join(methods, `" || method == "`)
+			p.P(`if _, ok := v["`, fn, `"]; !ok && (method == "`, cond, `") {`)
+			p.P(`path = `, runtimePkg.Use(), `.JoinPath(path, "`, fn, `")`)
+			p.P(`return `, fmtPkg.Use(), `.Errorf("field %q is required for %q operation.", path, method)`)
 			p.P(`}`)
 		}
 	}

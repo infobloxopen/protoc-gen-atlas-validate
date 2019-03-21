@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package examplepb;
+
+import "google/api/annotations.proto";
+
+import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
+
+option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/examplepb;examplepb";
+
+message User2 {
+	int32 id = 1 [(atlas_validate.field).deny = create];
+	string name = 2 [(atlas_validate.field) = {required: [create, replace, update]}];
+}
+
+message EmptyResponse2 {}
+
+service Users2 {
+	rpc Create2(User2) returns (EmptyResponse2) {
+		option (google.api.http) = {
+			post: "/users";
+			body: "*";
+		};
+	}
+}
