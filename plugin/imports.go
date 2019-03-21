@@ -21,6 +21,26 @@ const (
 	runtimePkgPath = "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
 )
 
+var wkt = map[string]bool{
+	// ptypes
+	".google.protobuf.Timestamp": true,
+	".google.protobuf.Duration":  true,
+	".google.protobuf.Empty":     true,
+	".google.protobuf.Any":       true,
+	".google.protobuf.Struct":    true,
+
+	// nillable values
+	".google.protobuf.StringValue": true,
+	".google.protobuf.BytesValue":  true,
+	".google.protobuf.Int32Value":  true,
+	".google.protobuf.UInt32Value": true,
+	".google.protobuf.Int64Value":  true,
+	".google.protobuf.UInt64Value": true,
+	".google.protobuf.FloatValue":  true,
+	".google.protobuf.DoubleValue": true,
+	".google.protobuf.BoolValue":   true,
+}
+
 // initPluginImports function initializes plugin imports with set of prior-known
 // packages.
 func (p *Plugin) initPluginImports(g *generator.Generator) {
@@ -155,6 +175,10 @@ func (p *Plugin) isLocal(o generator.Object) bool {
 	return p.DefaultPackageName(o) == ""
 }
 
+func (p *Plugin) isWKT(t string) bool {
+	return wkt[t]
+}
+
 func (p *Plugin) objectNamed(name string) generator.Object {
 	obj := p.ObjectNamed(name)
 
@@ -163,8 +187,4 @@ func (p *Plugin) objectNamed(name string) generator.Object {
 	}
 
 	return obj
-}
-
-func (p *Plugin) objectFieldNamed(o generator.Object, t string, f string) generator.Object {
-	return p.objectNamed(o.File().GetMessage(t).GetFieldDescriptor(f).GetTypeName())
 }

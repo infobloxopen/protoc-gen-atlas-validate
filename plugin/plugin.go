@@ -189,37 +189,32 @@ func (p *Plugin) renderValidatorMethods() {
 		p.P(`// that match *.pb.gw.go/pattern_`, m.gwPattern, `.`)
 		p.P(`func validate_`, m.gwPattern, `(ctx `, ctxPkg.Use(), `.Context, r `, jsonPkg.Use(), `.RawMessage) (err error) {`)
 
-		o := p.objectNamed(m.inputType)
-		t := p.TypeName(o)
-
-		switch m.httpBody {
-		case "":
-
+		if m.httpBody == "" {
 			p.P(`if len(r) != 0 {`)
 			p.P(`return `, fmtPkg.Use(), `.Errorf("body is not allowed")`)
 			p.P(`}`)
 			p.P(`return nil`)
+		} else if p.isWKT(m.inputType) {
+			p.P(`return nil`)
+		} else {
 
-		case "*":
+			var (
+				o generator.Object
+				t string
+			)
+
+			o = p.objectNamed(m.inputType)
+			t = p.TypeName(o)
+
+			if m.httpBody != "*" {
+				o = p.objectNamed(o.File().GetMessage(t).GetFieldDescriptor(m.httpBody).GetTypeName())
+				t = p.TypeName(o)
+			}
 
 			if p.isLocal(o) {
 				p.P(`return validate_Object_`, t, `(ctx, r, "")`)
 			} else {
 				p.P(`if validator, ok := `, p.generateAtlasValidateJSONInterfaceSignature(t), `; ok {`)
-				p.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
-				p.P(`}`)
-				p.P(`return nil`)
-			}
-
-		default:
-
-			fo := p.objectFieldNamed(o, t, m.httpBody)
-			ft := p.TypeName(fo)
-
-			if p.isLocal(fo) {
-				p.P(`return validate_Object_`, ft, `(ctx, r, "")`)
-			} else {
-				p.P(`if validator, ok := `, p.generateAtlasValidateJSONInterfaceSignature(ft), `; ok {`)
 				p.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
 				p.P(`}`)
 				p.P(`return nil`)
@@ -284,7 +279,6 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 
 	p.P(`switch k {`)
 	for _, f := range o.GetField() {
-
 		p.P(`case "`, f.GetName(), `":`)
 
 		if p.IsMap(f) {
@@ -305,9 +299,6 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 
 		if f.IsMessage() && f.IsRepeated() {
 
-			fo := p.objectNamed(f.GetTypeName())
-			ft := p.TypeName(fo)
-
 			p.P(`if v[k] == nil {`)
 			p.P(`continue`)
 			p.P(`}`)
@@ -316,6 +307,14 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 			p.P(`if err = `, jsonPkg.Use(), `.Unmarshal(v[k], &vArr); err != nil {`)
 			p.P(`return `, fmtPkg.Use(), `.Errorf("invalid value for %q: expected array.", vArrPath)`)
 			p.P(`}`)
+
+			if p.isWKT(f.GetTypeName()) {
+				continue
+			}
+
+			fo := p.objectNamed(f.GetTypeName())
+			ft := p.TypeName(fo)
+
 			if !p.isLocal(fo) {
 				p.P(`validator, ok := `, p.generateAtlasValidateJSONInterfaceSignature(ft))
 				p.P(`if !ok {`)
@@ -324,18 +323,22 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 			}
 			p.P(`for i, vv := range vArr {`)
 			p.P(`vvPath := `, fmtPkg.Use(), `.Sprintf("%s.[%d]", vArrPath, i)`)
-			if !p.isLocal(fo) {
-				p.P(`if err = validator.AtlasValidateJSON(ctx, vv, vvPath); err != nil {`)
+			if p.isLocal(fo) {
+				p.P(`if err = validate_Object_`, ft, `(ctx, vv, vvPath); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			} else {
-				p.P(`if err = validate_Object_`, ft, `(ctx, vv, vvPath); err != nil {`)
+				p.P(`if err = validator.AtlasValidateJSON(ctx, vv, vvPath); err != nil {`)
 				p.P(`return err`)
 				p.P(`}`)
 			}
 			p.P(`}`)
 
 		} else if f.IsMessage() {
+
+			if p.isWKT(f.GetTypeName()) {
+				continue
+			}
 
 			fo := p.objectNamed(f.GetTypeName())
 			ft := p.TypeName(fo)
