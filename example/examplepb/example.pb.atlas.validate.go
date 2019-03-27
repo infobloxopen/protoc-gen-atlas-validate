@@ -10,6 +10,10 @@ import runtime1 "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
 import external "github.com/infobloxopen/protoc-gen-atlas-validate/example/external"
 import proto "github.com/gogo/protobuf/proto"
 import math "math"
+import _ "github.com/golang/protobuf/ptypes/any"
+import _ "github.com/golang/protobuf/ptypes/empty"
+import _ "github.com/golang/protobuf/ptypes/timestamp"
+import _ "github.com/golang/protobuf/ptypes/wrappers"
 import _ "github.com/infobloxopen/protoc-gen-atlas-validate/example/external"
 import _ "github.com/infobloxopen/protoc-gen-atlas-validate/options"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
@@ -119,6 +123,18 @@ func validate_Groups_ValidatedList_1(ctx context.Context, r json.RawMessage) (er
 	return nil
 }
 
+// validate_Groups_ValidateWKT_0 is an entrypoint for validating "PUT" HTTP request
+// that match *.pb.gw.go/pattern_Groups_ValidateWKT_0.
+func validate_Groups_ValidateWKT_0(ctx context.Context, r json.RawMessage) (err error) {
+	return nil
+}
+
+// validate_Groups_ValidateWKT_1 is an entrypoint for validating "PUT" HTTP request
+// that match *.pb.gw.go/pattern_Groups_ValidateWKT_1.
+func validate_Groups_ValidateWKT_1(ctx context.Context, r json.RawMessage) (err error) {
+	return nil
+}
+
 // validate_Object_User function validates a JSON for a given object.
 func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (err error) {
 	if hook, ok := interface{}(&User{}).(interface {
@@ -209,6 +225,16 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 			if err = validator.AtlasValidateJSON(ctx, vv, vvPath); err != nil {
 				return err
 			}
+		case "empty_list":
+			if v[k] == nil {
+				continue
+			}
+			var vArr []json.RawMessage
+			vArrPath := runtime1.JoinPath(path, k)
+			if err = json.Unmarshal(v[k], &vArr); err != nil {
+				return fmt.Errorf("invalid value for %q: expected array.", vArrPath)
+			}
+		case "timestamp":
 		default:
 			if !allowUnknown {
 				return fmt.Errorf("unknown field %q.", runtime1.JoinPath(path, k))

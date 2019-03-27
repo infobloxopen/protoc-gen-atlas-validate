@@ -3,6 +3,10 @@ syntax = "proto3";
 package examplepb;
 
 import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
 
 import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
 import "github.com/infobloxopen/protoc-gen-atlas-validate/example/external/external.proto";
@@ -22,7 +26,12 @@ message User {
 
 	repeated Parent parents = 6;
 
+
 	external.ExternalUser external_user = 7;
+
+    repeated google.protobuf.Empty empty_list = 8;
+
+    google.protobuf.Timestamp timestamp = 9;
 
 }
 
@@ -144,6 +153,18 @@ service Groups {
 			get: "/groups";
 			additional_bindings: {
 				get: "/groups_add";
+			};
+		};
+	}
+
+    rpc ValidateWKT(google.protobuf.Any) returns (google.protobuf.DoubleValue) {
+		option (atlas_validate.method).allow_unknown_fields = false;
+		option (google.api.http) = {
+			put: "/wkt_get";
+            body: "*";
+			additional_bindings: {
+				put: "/wkt_get_additional";
+                body: "*";
 			};
 		};
 	}

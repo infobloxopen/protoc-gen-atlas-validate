@@ -13,6 +13,7 @@ import (
 	"net/http"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
 	"github.com/infobloxopen/protoc-gen-atlas-validate/example/external"
@@ -258,6 +259,32 @@ func request_Groups_ValidatedList_1(ctx context.Context, marshaler runtime.Marsh
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.ValidatedList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_Groups_ValidateWKT_0(ctx context.Context, marshaler runtime.Marshaler, client GroupsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq any.Any
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ValidateWKT(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_Groups_ValidateWKT_1(ctx context.Context, marshaler runtime.Marshaler, client GroupsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq any.Any
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ValidateWKT(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -803,6 +830,64 @@ func RegisterGroupsHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
+	mux.Handle("PUT", pattern_Groups_ValidateWKT_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Groups_ValidateWKT_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Groups_ValidateWKT_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_Groups_ValidateWKT_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Groups_ValidateWKT_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Groups_ValidateWKT_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -814,6 +899,10 @@ var (
 	pattern_Groups_ValidatedList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"groups"}, ""))
 
 	pattern_Groups_ValidatedList_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"groups_add"}, ""))
+
+	pattern_Groups_ValidateWKT_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"wkt_get"}, ""))
+
+	pattern_Groups_ValidateWKT_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"wkt_get_additional"}, ""))
 )
 
 var (
@@ -824,4 +913,8 @@ var (
 	forward_Groups_ValidatedList_0 = runtime.ForwardResponseMessage
 
 	forward_Groups_ValidatedList_1 = runtime.ForwardResponseMessage
+
+	forward_Groups_ValidateWKT_0 = runtime.ForwardResponseMessage
+
+	forward_Groups_ValidateWKT_1 = runtime.ForwardResponseMessage
 )

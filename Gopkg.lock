@@ -2,12 +2,15 @@
 
 
 [[projects]]
+  digest = "1:e5986c1f2fc150bfbacf00d73ca62d64e60256f006c4d133d7d3e8ce73500417"
   name = "github.com/gogo/googleapis"
   packages = ["google/api"]
+  pruneopts = "UT"
   revision = "08a7655d27152912db7aaf4f983275eaf8d128ef"
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:254d3375882125ef24e315f1863c372a55d0f8f68ee34fbe2378e048730712f6"
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
@@ -34,12 +37,14 @@
     "protoc-gen-gogo/grpc",
     "protoc-gen-gogo/plugin",
     "vanity",
-    "vanity/command"
+    "vanity/command",
   ]
+  pruneopts = "UT"
   revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:a900f61eec53062419a966d0cf0f4afdce2eefdf39d976fe2fc7b7289b99c038"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -48,24 +53,30 @@
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
+    "ptypes/empty",
     "ptypes/struct",
-    "ptypes/timestamp"
+    "ptypes/timestamp",
+    "ptypes/wrappers",
   ]
+  pruneopts = "UT"
   revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:6a06217fc753e65aea71446b777393009ef6797dadc0086c4f75bd16590be04d"
   name = "github.com/grpc-ecosystem/grpc-gateway"
   packages = [
     "runtime",
     "runtime/internal",
-    "utilities"
+    "utilities",
   ]
+  pruneopts = "UT"
   revision = "92583770e3f01b09a0d3e9bdf64321d8bebd48f2"
   version = "v1.4.1"
 
 [[projects]]
   branch = "master"
+  digest = "1:b5c3834d33445efdc5a8dcb154bed9e4c211edadbf02f6f5cc20c5e9be26a499"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -74,17 +85,21 @@
     "http2/hpack",
     "idna",
     "internal/timeseries",
-    "trace"
+    "trace",
   ]
+  pruneopts = "UT"
   revision = "c39426892332e1bb5ec0a434a079bf82f5d30c54"
 
 [[projects]]
   branch = "master"
+  digest = "1:0316a8ad208917f1d141b077e278980fd5e4594f3a85f835dacbf24d85798252"
   name = "golang.org/x/sys"
   packages = ["unix"]
+  pruneopts = "UT"
   revision = "4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf"
 
 [[projects]]
+  digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
   name = "golang.org/x/text"
   packages = [
     "collate",
@@ -100,21 +115,25 @@
     "unicode/bidi",
     "unicode/cldr",
     "unicode/norm",
-    "unicode/rangetable"
+    "unicode/rangetable",
   ]
+  pruneopts = "UT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:6c6b70cf6d2788d9f7dc6589bc88e0e1c7edc40612294431ebb7d09536d12240"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api/annotations",
-    "googleapis/rpc/status"
+    "googleapis/rpc/status",
   ]
+  pruneopts = "UT"
   revision = "383e8b2c3b9e36c4076b235b32537292176bae20"
 
 [[projects]]
+  digest = "1:3dd7996ce6bf52dec6a2f69fa43e7c4cefea1d4dfa3c8ab7a5f8a9f7434e239d"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -142,14 +161,35 @@
     "resolver/passthrough",
     "stats",
     "status",
-    "tap"
+    "tap",
   ]
+  pruneopts = "UT"
   revision = "32fb0ac620c32ba40a4626ddf94d90d12cce3455"
   version = "v1.14.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "26eba43fbe559232c273dd2556b99600504c52c8eec98bac82bb24b106c431ec"
+  input-imports = [
+    "github.com/gogo/googleapis/google/api",
+    "github.com/gogo/protobuf/proto",
+    "github.com/gogo/protobuf/protoc-gen-gogo/descriptor",
+    "github.com/gogo/protobuf/protoc-gen-gogo/generator",
+    "github.com/gogo/protobuf/vanity/command",
+    "github.com/golang/protobuf/proto",
+    "github.com/golang/protobuf/ptypes/any",
+    "github.com/golang/protobuf/ptypes/empty",
+    "github.com/golang/protobuf/ptypes/timestamp",
+    "github.com/golang/protobuf/ptypes/wrappers",
+    "github.com/grpc-ecosystem/grpc-gateway/runtime",
+    "github.com/grpc-ecosystem/grpc-gateway/utilities",
+    "golang.org/x/net/context",
+    "google.golang.org/genproto/googleapis/api/annotations",
+    "google.golang.org/grpc",
+    "google.golang.org/grpc/codes",
+    "google.golang.org/grpc/grpclog",
+    "google.golang.org/grpc/metadata",
+    "google.golang.org/grpc/status",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

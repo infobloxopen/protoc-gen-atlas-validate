@@ -106,6 +106,18 @@ var validate_Patterns = []struct {
 		validator:    validate_Groups_ValidatedList_1,
 		allowUnknown: false,
 	},
+	{
+		pattern:      pattern_Groups_ValidateWKT_0,
+		httpMethod:   "PUT",
+		validator:    validate_Groups_ValidateWKT_0,
+		allowUnknown: false,
+	},
+	{
+		pattern:      pattern_Groups_ValidateWKT_1,
+		httpMethod:   "PUT",
+		validator:    validate_Groups_ValidateWKT_1,
+		allowUnknown: false,
+	},
 
 	// patterns for file example/examplepb/examplepb.proto
 
