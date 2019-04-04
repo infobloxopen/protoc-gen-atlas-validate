@@ -33,14 +33,15 @@ func validate_Object_User2(ctx context.Context, r json.RawMessage, path string) 
 		}
 	}
 
-	if err = validate_required_Object_User2(ctx, v, path); err != nil {
-		return err
-	}
-
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
+
+	if err = validate_required_Object_User2(ctx, v, path); err != nil {
+		return err
+	}
+
 	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
@@ -92,14 +93,15 @@ func validate_Object_EmptyResponse2(ctx context.Context, r json.RawMessage, path
 		}
 	}
 
-	if err = validate_required_Object_EmptyResponse2(ctx, v, path); err != nil {
-		return err
-	}
-
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
+
+	if err = validate_required_Object_EmptyResponse2(ctx, v, path); err != nil {
+		return err
+	}
+
 	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {

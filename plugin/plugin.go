@@ -275,14 +275,15 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P(`}`)
 	p.P(`}`)
 	p.P()
-	p.P(`if err = validate_required_Object_`, t, `(ctx, v, path); err != nil {`)
-	p.P(`return err`)
-	p.P(`}`)
-	p.P()
 	p.P(`var v map[string]`, jsonPkg.Use(), `.RawMessage`)
 	p.P(`if err = `, jsonPkg.Use(), `.Unmarshal(r, &v); err != nil {`)
 	p.P(`return `, fmtPkg.Use(), `.Errorf("invalid value for %q: expected object.", path)`)
 	p.P(`}`)
+	p.P()
+	p.P(`if err = validate_required_Object_`, t, `(ctx, v, path); err != nil {`)
+	p.P(`return err`)
+	p.P(`}`)
+	p.P()
 	p.P(`allowUnknown := `, runtimePkg.Use(), `.AllowUnknownFromContext(ctx)`)
 	p.P()
 	p.P(`for k, _ := range v {`)
@@ -525,7 +526,15 @@ func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t stri
 	p.P(`method := `, runtimePkg.Use(), `.HTTPMethodFromContext(ctx)`)
 	p.P(`_ = method`)
 
-	for fn, methods := range requiredFields {
+	var fields []string
+	for v := range requiredFields {
+		fields = append(fields, v)
+	}
+
+	sort.StringSlice(fields).Sort()
+
+	for _, fn := range fields {
+		methods := requiredFields[fn]
 		if len(methods) == 3 {
 			p.P(`if _, ok := v["`, fn, `"]; !ok {`)
 			p.P(`path = `, runtimePkg.Use(), `.JoinPath(path, "`, fn, `")`)
