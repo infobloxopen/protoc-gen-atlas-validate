@@ -119,8 +119,6 @@ var validate_Patterns = []struct {
 		allowUnknown: false,
 	},
 
-	// patterns for file example/examplepb/examplepb.proto
-
 	// patterns for file example/examplepb/example_multi.proto
 	{
 		pattern:      pattern_Users2_Create2_0,
@@ -128,6 +126,9 @@ var validate_Patterns = []struct {
 		validator:    validate_Users2_Create2_0,
 		allowUnknown: false,
 	},
+
+	// patterns for file example/examplepb/examplepb.proto
+
 }
 
 // AtlasValidateAnnotator parses JSON input and validates unknown fields

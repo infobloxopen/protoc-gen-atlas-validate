@@ -144,15 +144,17 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 			return err
 		}
 	}
+
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_User(ctx, v, path); err != nil {
 		return err
 	}
+
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
 		switch k {
@@ -275,15 +277,17 @@ func validate_Object_User_Parent(ctx context.Context, r json.RawMessage, path st
 			return err
 		}
 	}
+
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_User_Parent(ctx, v, path); err != nil {
 		return err
 	}
+
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
 		switch k {
@@ -324,15 +328,17 @@ func validate_Object_Address(ctx context.Context, r json.RawMessage, path string
 			return err
 		}
 	}
+
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_Address(ctx, v, path); err != nil {
 		return err
 	}
+
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
 		switch k {
@@ -381,15 +387,17 @@ func validate_Object_Group(ctx context.Context, r json.RawMessage, path string) 
 			return err
 		}
 	}
+
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_Group(ctx, v, path); err != nil {
 		return err
 	}
+
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
 		switch k {
@@ -440,15 +448,17 @@ func validate_Object_CreateUserRequest(ctx context.Context, r json.RawMessage, p
 			return err
 		}
 	}
+
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_CreateUserRequest(ctx, v, path); err != nil {
 		return err
 	}
+
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
 		switch k {
@@ -497,15 +507,17 @@ func validate_Object_UpdateUserRequest(ctx context.Context, r json.RawMessage, p
 			return err
 		}
 	}
+
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_UpdateUserRequest(ctx, v, path); err != nil {
 		return err
 	}
+
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
 		switch k {
@@ -554,15 +566,17 @@ func validate_Object_EmptyRequest(ctx context.Context, r json.RawMessage, path s
 			return err
 		}
 	}
+
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_EmptyRequest(ctx, v, path); err != nil {
 		return err
 	}
+
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
 		switch k {
@@ -602,15 +616,17 @@ func validate_Object_EmptyResponse(ctx context.Context, r json.RawMessage, path 
 			return err
 		}
 	}
+
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_EmptyResponse(ctx, v, path); err != nil {
 		return err
 	}
+
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
 		switch k {
@@ -650,15 +666,17 @@ func validate_Object_Profile(ctx context.Context, r json.RawMessage, path string
 			return err
 		}
 	}
+
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_Profile(ctx, v, path); err != nil {
 		return err
 	}
+
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
 		switch k {
@@ -705,15 +723,17 @@ func validate_Object_UpdateProfileRequest(ctx context.Context, r json.RawMessage
 			return err
 		}
 	}
+
 	var v map[string]json.RawMessage
 	if err = json.Unmarshal(r, &v); err != nil {
 		return fmt.Errorf("invalid value for %q: expected object.", path)
 	}
-	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	if err = validate_required_Object_UpdateProfileRequest(ctx, v, path); err != nil {
 		return err
 	}
+
+	allowUnknown := runtime1.AllowUnknownFromContext(ctx)
 
 	for k, _ := range v {
 		switch k {

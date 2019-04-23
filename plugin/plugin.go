@@ -157,7 +157,16 @@ func (p *Plugin) renderMethodDescriptors() {
 	p.P(`// Included for introspection purpose.`)
 	p.P(`allowUnknown bool`)
 	p.P(`} {`)
-	for f, methods := range p.methods {
+
+	var files []string
+	for f := range p.methods {
+		files = append(files, f)
+	}
+
+	sort.StringSlice(files).Sort()
+
+	for _, f := range files {
+		methods := p.methods[f]
 		p.P(`// patterns for file `, f)
 		for _, m := range methods {
 			p.P(`{`)
@@ -265,15 +274,17 @@ func (p *Plugin) renderValidatorObjectMethod(o *descriptor.DescriptorProto, t st
 	p.P(`return err`)
 	p.P(`}`)
 	p.P(`}`)
+	p.P()
 	p.P(`var v map[string]`, jsonPkg.Use(), `.RawMessage`)
 	p.P(`if err = `, jsonPkg.Use(), `.Unmarshal(r, &v); err != nil {`)
 	p.P(`return `, fmtPkg.Use(), `.Errorf("invalid value for %q: expected object.", path)`)
 	p.P(`}`)
-	p.P(`allowUnknown := `, runtimePkg.Use(), `.AllowUnknownFromContext(ctx)`)
 	p.P()
 	p.P(`if err = validate_required_Object_`, t, `(ctx, v, path); err != nil {`)
 	p.P(`return err`)
 	p.P(`}`)
+	p.P()
+	p.P(`allowUnknown := `, runtimePkg.Use(), `.AllowUnknownFromContext(ctx)`)
 	p.P()
 	p.P(`for k, _ := range v {`)
 
@@ -515,7 +526,15 @@ func (p *Plugin) generateValidateRequired(md *descriptor.DescriptorProto, t stri
 	p.P(`method := `, runtimePkg.Use(), `.HTTPMethodFromContext(ctx)`)
 	p.P(`_ = method`)
 
-	for fn, methods := range requiredFields {
+	var fields []string
+	for v := range requiredFields {
+		fields = append(fields, v)
+	}
+
+	sort.StringSlice(fields).Sort()
+
+	for _, fn := range fields {
+		methods := requiredFields[fn]
 		if len(methods) == 3 {
 			p.P(`if _, ok := v["`, fn, `"]; !ok {`)
 			p.P(`path = `, runtimePkg.Use(), `.JoinPath(path, "`, fn, `")`)
