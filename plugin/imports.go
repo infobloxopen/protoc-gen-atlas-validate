@@ -183,7 +183,7 @@ func (p *Plugin) objectNamed(name string) generator.Object {
 	obj := p.ObjectNamed(name)
 
 	if !p.isLocal(obj) {
-		p.AddImport(string(obj.GoImportPath())).Use()
+		p.pluginImports.AddImport(string(obj.GoImportPath())).Use()
 	}
 
 	return obj
