@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	av_opts "github.com/infobloxopen/protoc-gen-atlas-validate/options"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
@@ -36,12 +37,18 @@ func main() {
 		panic(err)
 	}
 
-	builder := &validateBuilder{}
+	builder := &validateBuilder{
+		methods: make(map[string][]*methodDescriptor),
+	}
 
 	for _, protoFile := range plugin.Files {
 		methods := builder.gatherMethods(protoFile)
-		fmt.Fprintf(os.Stderr, "methods: %#v\n", methods)
+		if len(methods) != 0 {
+			builder.methods[*protoFile.Proto.Name] = methods
+		}
 	}
+
+	fmt.Fprintf(os.Stderr, "%#v\n", builder.methods)
 
 	resp := builder.generate(plugin)
 	out, err := proto.Marshal(resp)
@@ -71,7 +78,7 @@ func (b *validateBuilder) gatherMethods(file *protogen.File) []*methodDescriptor
 					httpMethod:   opt.method,
 					gwPattern:    fmt.Sprintf("%s_%s_%d", service.Desc.Name(), method.Desc.Name(), i),
 					inputType:    string(method.Input.Desc.Name()),
-					allowUnknown: false,
+					allowUnknown: b.getAllowUnknown(file.Desc.Options(), service.Desc.Options(), method.Desc.Options()),
 				})
 			}
 		}
@@ -146,4 +153,34 @@ func extractHTTPOpts(m *protogen.Method) []httpOpt {
 	}
 
 	return r
+}
+
+// getAllowUnknown function picks up correct allowUnknown option from file/service/method
+// hierarchy.
+func (b *validateBuilder) getAllowUnknown(file proto.Message, svc proto.Message, method proto.Message) bool {
+	var gavOpt *av_opts.AtlasValidateFileOption
+	v := proto.GetExtension(file, av_opts.E_File)
+	if v != nil {
+		gavOpt = v.(*av_opts.AtlasValidateFileOption)
+	}
+
+	var savOpt *av_opts.AtlasValidateServiceOption
+	v = proto.GetExtension(svc, av_opts.E_Service)
+	if v != nil {
+		savOpt = v.(*av_opts.AtlasValidateServiceOption)
+	}
+
+	var mavOpt *av_opts.AtlasValidateMethodOption
+	v = proto.GetExtension(method, av_opts.E_Method)
+	if v != nil {
+		mavOpt = v.(*av_opts.AtlasValidateMethodOption)
+	}
+
+	if mavOpt != nil {
+		return mavOpt.GetAllowUnknownFields()
+	} else if savOpt != nil {
+		return savOpt.GetAllowUnknownFields()
+	}
+
+	return gavOpt.GetAllowUnknownFields()
 }
