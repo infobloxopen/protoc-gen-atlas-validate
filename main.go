@@ -13,6 +13,7 @@ import (
 )
 
 type validateBuilder struct {
+	plugin   *protogen.Plugin
 	methods  map[string][]*methodDescriptor
 	genFiles map[string]*protogen.GeneratedFile
 }
@@ -39,17 +40,14 @@ func main() {
 	builder := &validateBuilder{
 		methods:  make(map[string][]*methodDescriptor),
 		genFiles: make(map[string]*protogen.GeneratedFile),
+		plugin:   plugin,
 	}
 
 	for _, protoFile := range plugin.Files {
 		methods := builder.gatherMethods(protoFile)
 		protoName := *protoFile.Proto.Name
 		builder.methods[protoName] = methods
-		fileName := protoFile.GeneratedFilenamePrefix + ".pb.atlas.validate.go"
-		builder.genFiles[protoName] = plugin.NewGeneratedFile(fileName, ".")
 	}
-
-	fmt.Fprintf(os.Stderr, "%#v\n", builder.methods)
 
 	resp := builder.generate(plugin)
 	out, err := proto.Marshal(resp)
@@ -62,7 +60,27 @@ func main() {
 
 func (b *validateBuilder) generate(plugin *protogen.Plugin) *pluginpb.CodeGeneratorResponse {
 	fmt.Fprintf(os.Stderr, "running generate\n")
-	return &pluginpb.CodeGeneratorResponse{}
+
+	for _, protoFile := range plugin.Files {
+		b.renderValidatorMethods(protoFile)
+	}
+
+	return plugin.Response()
+}
+
+func (b *validateBuilder) generateFile(protoFile *protogen.File) *protogen.GeneratedFile {
+	g := b.genFiles[*protoFile.Proto.Name]
+	if g != nil {
+		return g
+	}
+
+	// create package first and return generatedFile
+	fileName := protoFile.GeneratedFilenamePrefix + ".pb.atlas.validate.go"
+	g = b.plugin.NewGeneratedFile(fileName, ".")
+	g.P("package ", protoFile.GoPackageName)
+	b.genFiles[*protoFile.Proto.Name] = g
+
+	return g
 }
 
 func (b *validateBuilder) gatherMethods(file *protogen.File) []*methodDescriptor {
@@ -184,4 +202,88 @@ func (b *validateBuilder) getAllowUnknown(file proto.Message, svc proto.Message,
 	}
 
 	return gavOpt.GetAllowUnknownFields()
+}
+
+// renderValidatorMethods function generates entrypoints for validator one per each
+// HTTP request (and HTTP request additional_bindings).
+func (b *validateBuilder) renderValidatorMethods(protoFile *protogen.File) {
+	var g *protogen.GeneratedFile
+	for _, m := range b.methods[*protoFile.Proto.Name] {
+		// create protoFile iff we need to generate something
+		g = b.generateFile(protoFile)
+
+		g.P(`// validate_`, m.gwPattern, ` is an entrypoint for validating "`, m.httpMethod, `" HTTP request `)
+		g.P(`// that match *.pb.gw.go/pattern_`, m.gwPattern, `.`)
+		g.P(`func validate_`, m.gwPattern, `(ctx `, generateImport("Context", "context", g), `, r `, generateImport("RawMessage", "encoding/json", g), `) (err error) {`)
+
+		if m.httpBody == "" {
+			g.P(`if len(r) != 0 {`)
+			g.P(`return `, generateImport("Errorf", "fmt", g), `("body is not allowed")`)
+			g.P(`}`)
+			g.P(`return nil`)
+		} else if b.isWKT(m.inputType) {
+			g.P(`return nil`)
+		} else {
+			g.P("// Not Implemented")
+			g.P("return nil")
+			// var (
+			// 	o generator.Object
+			// 	t string
+			// )
+
+			// o = p.objectNamed(m.inputType)
+			// t = p.TypeName(o)
+
+			// if m.httpBody != "*" {
+			// 	o = p.objectNamed(o.File().GetMessage(t).GetFieldDescriptor(m.httpBody).GetTypeName())
+			// 	t = p.TypeName(o)
+			// }
+
+			// if p.isLocal(o) {
+			// 	g.P(`return validate_Object_`, t, `(ctx, r, "")`)
+			// } else {
+			// 	g.P(`if validator, ok := `, p.generateAtlasValidateJSONInterfaceSignature(t), `; ok {`)
+			// 	g.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
+			// 	g.P(`}`)
+			// 	g.P(`return nil`)
+			// }
+		}
+		g.P(`}`)
+		g.P()
+	}
+}
+
+func generateImport(name string, importPath string, g *protogen.GeneratedFile) string {
+	return g.QualifiedGoIdent(protogen.GoIdent{
+		GoName:       name,
+		GoImportPath: protogen.GoImportPath(importPath),
+	})
+}
+
+// func (b *validateBuilder) isLocal(o generator.Object) bool {
+// 	return p.DefaultPackageName(o) == ""
+// }
+
+var wkt = map[string]bool{
+	// ptypes
+	".google.protobuf.Timestamp": true,
+	".google.protobuf.Duration":  true,
+	".google.protobuf.Empty":     true,
+	".google.protobuf.Any":       true,
+	".google.protobuf.Struct":    true,
+
+	// nillable values
+	".google.protobuf.StringValue": true,
+	".google.protobuf.BytesValue":  true,
+	".google.protobuf.Int32Value":  true,
+	".google.protobuf.UInt32Value": true,
+	".google.protobuf.Int64Value":  true,
+	".google.protobuf.UInt64Value": true,
+	".google.protobuf.FloatValue":  true,
+	".google.protobuf.DoubleValue": true,
+	".google.protobuf.BoolValue":   true,
+}
+
+func (b *validateBuilder) isWKT(t string) bool {
+	return wkt[t]
 }
