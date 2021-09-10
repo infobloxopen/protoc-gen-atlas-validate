@@ -13,12 +13,11 @@ import (
 )
 
 type validateBuilder struct {
-	methods map[string][]*methodDescriptor
+	methods  map[string][]*methodDescriptor
+	genFiles map[string]*protogen.GeneratedFile
 }
 
 func main() {
-	// response := command.GeneratePlugin(command.Read(), plugin, ".pb.atlas.validate.go")
-
 	input, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		panic(err)
@@ -38,14 +37,16 @@ func main() {
 	}
 
 	builder := &validateBuilder{
-		methods: make(map[string][]*methodDescriptor),
+		methods:  make(map[string][]*methodDescriptor),
+		genFiles: make(map[string]*protogen.GeneratedFile),
 	}
 
 	for _, protoFile := range plugin.Files {
 		methods := builder.gatherMethods(protoFile)
-		if len(methods) != 0 {
-			builder.methods[*protoFile.Proto.Name] = methods
-		}
+		protoName := *protoFile.Proto.Name
+		builder.methods[protoName] = methods
+		fileName := protoFile.GeneratedFilenamePrefix + ".pb.atlas.validate.go"
+		builder.genFiles[protoName] = plugin.NewGeneratedFile(fileName, ".")
 	}
 
 	fmt.Fprintf(os.Stderr, "%#v\n", builder.methods)
