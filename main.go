@@ -100,7 +100,7 @@ func (b *validateBuilder) gatherMethods(file *protogen.File) []*methodDescriptor
 					httpBody:         opt.body,
 					httpMethod:       opt.method,
 					gwPattern:        fmt.Sprintf("%s_%s_%d", service.Desc.Name(), method.Desc.Name(), i),
-					inputType:        string(method.Input.Desc.Name()),
+					inputType:        string(method.Input.Desc.FullName()),
 					allowUnknown:     b.getAllowUnknown(file.Desc.Options(), service.Desc.Options(), method.Desc.Options()),
 				})
 			}
@@ -272,22 +272,22 @@ func (b *validateBuilder) isLocal(message *protogen.Message) bool {
 
 var wkt = map[string]bool{
 	// ptypes
-	".google.protobuf.Timestamp": true,
-	".google.protobuf.Duration":  true,
-	".google.protobuf.Empty":     true,
-	".google.protobuf.Any":       true,
-	".google.protobuf.Struct":    true,
+	"google.protobuf.Timestamp": true,
+	"google.protobuf.Duration":  true,
+	"google.protobuf.Empty":     true,
+	"google.protobuf.Any":       true,
+	"google.protobuf.Struct":    true,
 
 	// nillable values
-	".google.protobuf.StringValue": true,
-	".google.protobuf.BytesValue":  true,
-	".google.protobuf.Int32Value":  true,
-	".google.protobuf.UInt32Value": true,
-	".google.protobuf.Int64Value":  true,
-	".google.protobuf.UInt64Value": true,
-	".google.protobuf.FloatValue":  true,
-	".google.protobuf.DoubleValue": true,
-	".google.protobuf.BoolValue":   true,
+	"google.protobuf.StringValue": true,
+	"google.protobuf.BytesValue":  true,
+	"google.protobuf.Int32Value":  true,
+	"google.protobuf.UInt32Value": true,
+	"google.protobuf.Int64Value":  true,
+	"google.protobuf.UInt64Value": true,
+	"google.protobuf.FloatValue":  true,
+	"google.protobuf.DoubleValue": true,
+	"google.protobuf.BoolValue":   true,
 }
 
 func (b *validateBuilder) isWKT(t string) bool {
