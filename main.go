@@ -90,14 +90,15 @@ func (b *validateBuilder) gatherMethods(file *protogen.File) []*methodDescriptor
 		for _, method := range service.Methods {
 			for i, opt := range extractHTTPOpts(method) {
 				methods = append(methods, &methodDescriptor{
-					svc:          string(service.Desc.Name()),
-					method:       string(method.Desc.Name()),
-					idx:          i,
-					httpBody:     opt.body,
-					httpMethod:   opt.method,
-					gwPattern:    fmt.Sprintf("%s_%s_%d", service.Desc.Name(), method.Desc.Name(), i),
-					inputType:    string(method.Input.Desc.Name()),
-					allowUnknown: b.getAllowUnknown(file.Desc.Options(), service.Desc.Options(), method.Desc.Options()),
+					inputTypeMessage: method.Input,
+					svc:              string(service.Desc.Name()),
+					method:           string(method.Desc.Name()),
+					idx:              i,
+					httpBody:         opt.body,
+					httpMethod:       opt.method,
+					gwPattern:        fmt.Sprintf("%s_%s_%d", service.Desc.Name(), method.Desc.Name(), i),
+					inputType:        string(method.Input.Desc.Name()),
+					allowUnknown:     b.getAllowUnknown(file.Desc.Options(), service.Desc.Options(), method.Desc.Options()),
 				})
 			}
 		}
@@ -107,14 +108,15 @@ func (b *validateBuilder) gatherMethods(file *protogen.File) []*methodDescriptor
 }
 
 type methodDescriptor struct {
-	svc          string
-	method       string
-	httpBody     string
-	httpMethod   string
-	gwPattern    string
-	inputType    string
-	idx          int
-	allowUnknown bool
+	inputTypeMessage *protogen.Message
+	svc              string
+	method           string
+	httpBody         string
+	httpMethod       string
+	gwPattern        string
+	inputType        string
+	idx              int
+	allowUnknown     bool
 }
 
 type httpOpt struct {
@@ -224,29 +226,28 @@ func (b *validateBuilder) renderValidatorMethods(protoFile *protogen.File) {
 		} else if b.isWKT(m.inputType) {
 			g.P(`return nil`)
 		} else {
-			g.P("// Not Implemented")
-			g.P("return nil")
-			// var (
-			// 	o generator.Object
-			// 	t string
-			// )
+			fmt.Fprintf(os.Stderr, "httpBody: %s\n", m.httpBody)
+			fmt.Fprintf(os.Stderr, "inputType : %s\n", m.inputTypeMessage.Desc.Name())
+			typeName := string(m.inputTypeMessage.Desc.Name())
 
-			// o = p.objectNamed(m.inputType)
-			// t = p.TypeName(o)
+			if m.httpBody != "*" {
+				for _, field := range m.inputTypeMessage.Fields {
+					if string(field.Desc.Name()) == m.httpBody {
+						typeName = string(field.Message.Desc.Name())
+					}
+				}
+			}
 
-			// if m.httpBody != "*" {
-			// 	o = p.objectNamed(o.File().GetMessage(t).GetFieldDescriptor(m.httpBody).GetTypeName())
-			// 	t = p.TypeName(o)
-			// }
+			fmt.Fprintf(os.Stderr, "typeName: %s\n", typeName)
 
-			// if p.isLocal(o) {
-			// 	g.P(`return validate_Object_`, t, `(ctx, r, "")`)
-			// } else {
-			// 	g.P(`if validator, ok := `, p.generateAtlasValidateJSONInterfaceSignature(t), `; ok {`)
-			// 	g.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
-			// 	g.P(`}`)
-			// 	g.P(`return nil`)
-			// }
+			if b.isLocal(m.inputTypeMessage) {
+				g.P(`return validate_Object_`, typeName, `(ctx, r, "")`)
+			} else {
+				// g.P(`if validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(t), `; ok {`)
+				// g.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
+				// g.P(`}`)
+				g.P(`return nil`)
+			}
 		}
 		g.P(`}`)
 		g.P()
@@ -260,9 +261,9 @@ func generateImport(name string, importPath string, g *protogen.GeneratedFile) s
 	})
 }
 
-// func (b *validateBuilder) isLocal(o generator.Object) bool {
-// 	return p.DefaultPackageName(o) == ""
-// }
+func (b *validateBuilder) isLocal(message *protogen.Message) bool {
+	return true
+}
 
 var wkt = map[string]bool{
 	// ptypes
