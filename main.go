@@ -392,12 +392,12 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			g.P(`return `, generateImport("Errorf", "fmt", g), `("invalid value for %q: expected array.", vArrPath)`)
 			g.P(`}`)
 
-			if b.isWKT(string(f.Desc.FullName())) {
+			ft := strings.Title(string(f.Desc.Message().Name()))
+			fft := string(f.Desc.Message().FullName())
+
+			if b.isWKT(fft) {
 				continue
 			}
-
-			ft := strings.Title(string(f.Desc.Name()))
-			fft := string(f.Desc.FullName())
 
 			if !b.isLocal(fft) {
 				g.P(`validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(ft, g))
@@ -419,12 +419,12 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			g.P(`}`)
 
 		} else if f.Message != nil {
-			if b.isWKT(string(f.Desc.Message().FullName())) {
-				continue
-			}
-
 			ft := strings.Title(string(f.Desc.Message().Name()))
 			fft := string(f.Desc.Message().FullName())
+
+			if b.isWKT(fft) {
+				continue
+			}
 
 			g.P(`if v[k] == nil {`)
 			g.P(`continue`)
