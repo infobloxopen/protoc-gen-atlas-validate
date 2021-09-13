@@ -243,9 +243,9 @@ func (b *validateBuilder) renderValidatorMethods(protoFile *protogen.File) {
 			if b.isLocal(m.inputTypeMessage) {
 				g.P(`return validate_Object_`, typeName, `(ctx, r, "")`)
 			} else {
-				// g.P(`if validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(t), `; ok {`)
-				// g.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
-				// g.P(`}`)
+				g.P(`if validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(typeName, g), `; ok {`)
+				g.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
+				g.P(`}`)
 				g.P(`return nil`)
 			}
 		}
@@ -287,4 +287,9 @@ var wkt = map[string]bool{
 
 func (b *validateBuilder) isWKT(t string) bool {
 	return wkt[t]
+}
+
+func (b *validateBuilder) generateAtlasValidateJSONInterfaceSignature(t string, g *protogen.GeneratedFile) string {
+	return fmt.Sprintf(`interface{}(&%s{}).(interface{ AtlasValidateJSON(%s, %s, string) error })`,
+		t, generateImport("Context", "context", g), generateImport("RawMessage", "encoding/json", g))
 }
