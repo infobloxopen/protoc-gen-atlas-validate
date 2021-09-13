@@ -229,25 +229,23 @@ func (b *validateBuilder) renderValidatorMethods(protoFile *protogen.File) {
 		} else if b.isWKT(m.inputType) {
 			g.P(`return nil`)
 		} else {
-			// fmt.Fprintf(os.Stderr, "httpBody: %s\n", m.httpBody)
-			// fmt.Fprintf(os.Stderr, "inputType : %s\n", m.inputTypeMessage.Desc.Name())
 			typeName := string(m.inputTypeMessage.Desc.Name())
+			fullTypeName := string(m.inputTypeMessage.Desc.FullName())
 
 			if m.httpBody != "*" {
 				for _, field := range m.inputTypeMessage.Fields {
 					if string(field.Desc.Name()) == m.httpBody {
 						typeName = string(field.Message.Desc.Name())
+						fullTypeName = string(field.Message.Desc.FullName())
 						break
 					}
 				}
 			}
 
-			// fmt.Fprintf(os.Stderr, "typeName: %s\n", typeName)
-
-			if b.isLocal(m.inputTypeMessage) {
+			if b.isLocal(fullTypeName) {
 				g.P(`return validate_Object_`, typeName, `(ctx, r, "")`)
 			} else {
-				g.P(`if validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(typeName, g), `; ok {`)
+				g.P(`if validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(fullTypeName, g), `; ok {`)
 				g.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
 				g.P(`}`)
 				g.P(`return nil`)
@@ -265,9 +263,9 @@ func generateImport(name string, importPath string, g *protogen.GeneratedFile) s
 	})
 }
 
-func (b *validateBuilder) isLocal(message *protogen.Message) bool {
-	messagePackage := strings.Split(string(message.Desc.FullName()), ".")[0]
-	return messagePackage == b.packageName
+func (b *validateBuilder) isLocal(fullTypeName string) bool {
+	sp := strings.Split(fullTypeName, ".")
+	return sp[0] == b.packageName
 }
 
 var wkt = map[string]bool{
