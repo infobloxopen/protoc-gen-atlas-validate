@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	av_opts "github.com/infobloxopen/protoc-gen-atlas-validate/options"
 	"google.golang.org/genproto/googleapis/api/annotations"
@@ -13,9 +14,10 @@ import (
 )
 
 type validateBuilder struct {
-	plugin   *protogen.Plugin
-	methods  map[string][]*methodDescriptor
-	genFiles map[string]*protogen.GeneratedFile
+	plugin      *protogen.Plugin
+	methods     map[string][]*methodDescriptor
+	genFiles    map[string]*protogen.GeneratedFile
+	packageName string
 }
 
 func main() {
@@ -62,6 +64,7 @@ func (b *validateBuilder) generate(plugin *protogen.Plugin) *pluginpb.CodeGenera
 	fmt.Fprintf(os.Stderr, "running generate\n")
 
 	for _, protoFile := range plugin.Files {
+		b.packageName = string(protoFile.GoPackageName)
 		b.renderValidatorMethods(protoFile)
 	}
 
@@ -226,19 +229,20 @@ func (b *validateBuilder) renderValidatorMethods(protoFile *protogen.File) {
 		} else if b.isWKT(m.inputType) {
 			g.P(`return nil`)
 		} else {
-			fmt.Fprintf(os.Stderr, "httpBody: %s\n", m.httpBody)
-			fmt.Fprintf(os.Stderr, "inputType : %s\n", m.inputTypeMessage.Desc.Name())
+			// fmt.Fprintf(os.Stderr, "httpBody: %s\n", m.httpBody)
+			// fmt.Fprintf(os.Stderr, "inputType : %s\n", m.inputTypeMessage.Desc.Name())
 			typeName := string(m.inputTypeMessage.Desc.Name())
 
 			if m.httpBody != "*" {
 				for _, field := range m.inputTypeMessage.Fields {
 					if string(field.Desc.Name()) == m.httpBody {
 						typeName = string(field.Message.Desc.Name())
+						break
 					}
 				}
 			}
 
-			fmt.Fprintf(os.Stderr, "typeName: %s\n", typeName)
+			// fmt.Fprintf(os.Stderr, "typeName: %s\n", typeName)
 
 			if b.isLocal(m.inputTypeMessage) {
 				g.P(`return validate_Object_`, typeName, `(ctx, r, "")`)
@@ -262,7 +266,8 @@ func generateImport(name string, importPath string, g *protogen.GeneratedFile) s
 }
 
 func (b *validateBuilder) isLocal(message *protogen.Message) bool {
-	return true
+	messagePackage := strings.Split(string(message.Desc.FullName()), ".")[0]
+	return messagePackage == b.packageName
 }
 
 var wkt = map[string]bool{
