@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 
 	av_opts "github.com/infobloxopen/protoc-gen-atlas-validate/options"
@@ -11,6 +12,13 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/pluginpb"
+)
+
+const (
+	metadataPkgPath  = "google.golang.org/grpc/metadata"
+	gwruntimePkgPath = "github.com/grpc-ecosystem/grpc-gateway/runtime"
+
+	runtimePkgPath = "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
 )
 
 type validateBuilder struct {
@@ -66,6 +74,7 @@ func (b *validateBuilder) generate(plugin *protogen.Plugin) *pluginpb.CodeGenera
 	for _, protoFile := range plugin.Files {
 		b.packageName = string(protoFile.GoPackageName)
 		b.renderValidatorMethods(protoFile)
+		b.renderValidatorObjectMethods(protoFile)
 	}
 
 	return plugin.Response()
@@ -242,6 +251,8 @@ func (b *validateBuilder) renderValidatorMethods(protoFile *protogen.File) {
 				}
 			}
 
+			fmt.Fprintf(os.Stderr, "typeName: %s, fullName: %s\n", typeName, fullTypeName)
+
 			if b.isLocal(fullTypeName) {
 				g.P(`return validate_Object_`, typeName, `(ctx, r, "")`)
 			} else {
@@ -295,4 +306,188 @@ func (b *validateBuilder) isWKT(t string) bool {
 func (b *validateBuilder) generateAtlasValidateJSONInterfaceSignature(t string, g *protogen.GeneratedFile) string {
 	return fmt.Sprintf(`interface{}(&%s{}).(interface{ AtlasValidateJSON(%s, %s, string) error })`,
 		t, generateImport("Context", "context", g), generateImport("RawMessage", "encoding/json", g))
+}
+
+func (b *validateBuilder) generateAtlasJSONValidateInterfaceSignature(t string, g *protogen.GeneratedFile) string {
+	rawMessage := generateImport("RawMessage", "encoding/json", g)
+	return fmt.Sprintf(`interface{}(&%s{}).(interface { AtlasJSONValidate(%s, %s, string) (%s, error) })`,
+		t, generateImport("Context", "context", g), rawMessage, rawMessage)
+}
+
+func (b *validateBuilder) renderValidatorObjectMethods(protoFile *protogen.File) {
+	g := b.generateFile(protoFile)
+	for _, message := range protoFile.Messages {
+		// ptype := "." + p.file.GetPackage() + "." + o.GetName()
+		// otype := p.TypeName(p.objectNamed(ptype))
+
+		b.renderValidatorObjectMethod(message, g)
+		// b.generateValidateRequired(o, otype)
+
+		for _, innerMessage := range message.Messages {
+			if innerMessage.Desc.IsMapEntry() {
+				continue
+			}
+
+			// notype := p.TypeName(p.objectNamed(ptype + "." + no.GetName()))
+
+			b.renderValidatorObjectMethod(message, g)
+			// b.generateValidateRequired(no, notype)
+		}
+	}
+}
+
+func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message, g *protogen.GeneratedFile) {
+	// t should be type
+	t := string(message.Desc.Name())
+
+	g.P(`// validate_Object_`, t, ` function validates a JSON for a given object.`)
+	g.P(`func validate_Object_`, t, `(ctx `, generateImport("Context", "context", g), `, r `, generateImport("RawMessage", "encoding/json", g), `, path string) (err error) {`)
+	g.P(`if hook, ok := `, b.generateAtlasJSONValidateInterfaceSignature(t, g), `; ok {`)
+	g.P(`if r, err = hook.AtlasJSONValidate(ctx, r, path); err != nil {`)
+	g.P(`return err`)
+	g.P(`}`)
+	g.P(`}`)
+	g.P()
+	g.P(`var v map[string]`, generateImport("RawMessage", "encoding/json", g))
+	g.P(`if err = `, generateImport("Unmarshal", "encoding/json", g), `(r, &v); err != nil {`)
+	g.P(`return `, generateImport("Errorf", "fmt", g), `("invalid value for %q: expected object.", path)`)
+	g.P(`}`)
+	g.P()
+	g.P(`if err = validate_required_Object_`, t, `(ctx, v, path); err != nil {`)
+	g.P(`return err`)
+	g.P(`}`)
+	g.P()
+	g.P(`allowUnknown := `, generateImport("AllowUnknownFromContext", runtimePkgPath, g), `(ctx)`)
+	g.P()
+	g.P(`for k, _ := range v {`)
+
+	g.P(`switch k {`)
+	for _, f := range message.Fields {
+		g.P(`case "`, f.Desc.Name(), `":`)
+
+		if f.Desc.IsMap() {
+			continue
+		}
+
+		fExt := proto.GetExtension(f.Desc.Options(), av_opts.E_Field)
+		if fExt != nil {
+			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
+			methods := b.GetDeniedMethods(favOpt.GetDeny())
+			if len(methods) != 0 {
+				cond := strings.Join(methods, `" || method == "`)
+				g.P(`method := `, generateImport("HTTPMethodFromContext", runtimePkgPath, g), `(ctx)`)
+				g.P(`if method == "`, cond, `" {`)
+				g.P(`return `, generateImport("Errorf", "fmt", g), `("field %q is unsupported for %q operation.", k, method)`)
+				g.P("}")
+			}
+		}
+
+		if f.Message != nil && f.Desc.IsList() {
+			g.P(`if v[k] == nil {`)
+			g.P(`continue`)
+			g.P(`}`)
+			g.P(`var vArr []`, generateImport("RawMessage", "encoding/json", g))
+			g.P(`vArrPath := `, generateImport("JoinPath", runtimePkgPath, g), `(path, k)`)
+			g.P(`if err = `, generateImport("Unmarshal", "encoding/json", g), `(v[k], &vArr); err != nil {`)
+			g.P(`return `, generateImport("Errorf", "fmt", g), `("invalid value for %q: expected array.", vArrPath)`)
+			g.P(`}`)
+
+			if b.isWKT(string(f.Desc.FullName())) {
+				continue
+			}
+
+			ft := strings.Title(string(f.Desc.Name()))
+			fft := string(f.Desc.FullName())
+
+			if !b.isLocal(fft) {
+				g.P(`validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(ft, g))
+				g.P(`if !ok {`)
+				g.P(`continue`)
+				g.P(`}`)
+			}
+			g.P(`for i, vv := range vArr {`)
+			g.P(`vvPath := `, generateImport("Sprintf", "fmt", g), `("%s.[%d]", vArrPath, i)`)
+			if b.isLocal(fft) {
+				g.P(`if err = validate_Object_`, ft, `(ctx, vv, vvPath); err != nil {`)
+				g.P(`return err`)
+				g.P(`}`)
+			} else {
+				g.P(`if err = validator.AtlasValidateJSON(ctx, vv, vvPath); err != nil {`)
+				g.P(`return err`)
+				g.P(`}`)
+			}
+			g.P(`}`)
+
+		} else if f.Message != nil {
+			if b.isWKT(string(f.Desc.Message().FullName())) {
+				continue
+			}
+
+			ft := strings.Title(string(f.Desc.Message().Name()))
+			fft := string(f.Desc.Message().FullName())
+
+			g.P(`if v[k] == nil {`)
+			g.P(`continue`)
+			g.P(`}`)
+			g.P(`vv := v[k]`)
+			g.P(`vvPath := `, generateImport("JoinPath", runtimePkgPath, g), `(path, k)`)
+			if b.isLocal(fft) {
+				g.P(`if err = validate_Object_`, ft, `(ctx, vv, vvPath); err != nil {`)
+				g.P(`return err`)
+				g.P(`}`)
+			} else {
+				g.P(`validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(fft, g))
+				g.P(`if !ok {`)
+				g.P(`continue`)
+				g.P(`}`)
+				g.P(`if err = validator.AtlasValidateJSON(ctx, vv, vvPath); err != nil {`)
+				g.P(`return err`)
+				g.P(`}`)
+			}
+		}
+	}
+
+	g.P(`default:`)
+	g.P(`if !allowUnknown {`)
+	g.P(`return `, generateImport("Errorf", "fmt", g), `("unknown field %q.", `, generateImport("JoinPath", runtimePkgPath, g), `(path, k))`)
+	g.P(`}`)
+	g.P(`}`)
+	g.P(`}`)
+	g.P(`return nil`)
+	g.P(`}`)
+	g.P()
+
+	g.P(`// AtlasValidateJSON function validates a JSON for object `, t, `.`)
+	g.P(`func (_ *`, t, `) AtlasValidateJSON(ctx `, generateImport("Context", "context", g), `, r `, generateImport("RawMessage", "encoding/json", g), `, path string) (err error) {`)
+	g.P(`if hook, ok := `, b.generateAtlasJSONValidateInterfaceSignature(t, g), `; ok {`)
+	g.P(`if r, err = hook.AtlasJSONValidate(ctx, r, path); err != nil {`)
+	g.P(`return err`)
+	g.P(`}`)
+	g.P(`}`)
+	g.P(`return validate_Object_`, t, `(ctx, r, path)`)
+	g.P(`}`)
+	g.P()
+}
+
+//Return methods to which field marked as denied
+func (b *validateBuilder) GetDeniedMethods(options []av_opts.AtlasValidateFieldOption_Operation) []string {
+	httpMethods := make(map[string]struct{}, 0)
+	for _, op := range options {
+		switch op {
+		case av_opts.AtlasValidateFieldOption_create:
+			httpMethods["POST"] = struct{}{}
+		case av_opts.AtlasValidateFieldOption_update:
+			httpMethods["PATCH"] = struct{}{}
+		case av_opts.AtlasValidateFieldOption_replace:
+			httpMethods["PUT"] = struct{}{}
+		}
+	}
+
+	uniqueMethods := make([]string, 0)
+	for m := range httpMethods {
+		uniqueMethods = append(uniqueMethods, m)
+	}
+
+	sort.StringSlice(uniqueMethods).Sort()
+	return uniqueMethods
 }
