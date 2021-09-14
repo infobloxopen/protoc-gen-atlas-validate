@@ -342,7 +342,7 @@ func (b *validateBuilder) renderValidatorObjectMethods(protoFile *protogen.File)
 
 func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message, g *protogen.GeneratedFile) {
 	// t should be type
-	t := string(message.Desc.Name())
+	// t := string(message.Desc.Name())
 	fft := string(message.Desc.FullName())
 
 	g.P(`// validate_Object_`, objectName(fft), ` function validates a JSON for a given object.`)
@@ -397,7 +397,7 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			g.P(`return `, generateImport("Errorf", "fmt", g), `("invalid value for %q: expected array.", vArrPath)`)
 			g.P(`}`)
 
-			fft = string(f.Desc.Message().FullName())
+			fft := string(f.Desc.Message().FullName())
 
 			if b.isWKT(fft) {
 				continue
@@ -423,7 +423,7 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			g.P(`}`)
 
 		} else if f.Message != nil {
-			fft = string(f.Desc.Message().FullName())
+			fft := string(f.Desc.Message().FullName())
 
 			if b.isWKT(fft) {
 				continue
@@ -461,14 +461,14 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 	g.P(`}`)
 	g.P()
 
-	g.P(`// AtlasValidateJSON function validates a JSON for object `, t, `.`)
-	g.P(`func (_ *`, t, `) AtlasValidateJSON(ctx `, generateImport("Context", "context", g), `, r `, generateImport("RawMessage", "encoding/json", g), `, path string) (err error) {`)
-	g.P(`if hook, ok := `, b.generateAtlasJSONValidateInterfaceSignature(t, g), `; ok {`)
+	g.P(`// AtlasValidateJSON function validates a JSON for object `, objectName(fft), `.`)
+	g.P(`func (_ *`, objectName(fft), `) AtlasValidateJSON(ctx `, generateImport("Context", "context", g), `, r `, generateImport("RawMessage", "encoding/json", g), `, path string) (err error) {`)
+	g.P(`if hook, ok := `, b.generateAtlasJSONValidateInterfaceSignature(objectName(fft), g), `; ok {`)
 	g.P(`if r, err = hook.AtlasJSONValidate(ctx, r, path); err != nil {`)
 	g.P(`return err`)
 	g.P(`}`)
 	g.P(`}`)
-	g.P(`return validate_Object_`, t, `(ctx, r, path)`)
+	g.P(`return validate_Object_`, objectName(fft), `(ctx, r, path)`)
 	g.P(`}`)
 	g.P()
 }
