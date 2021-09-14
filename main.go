@@ -325,17 +325,15 @@ func (b *validateBuilder) renderValidatorObjectMethods(protoFile *protogen.File)
 		// otype := p.TypeName(p.objectNamed(ptype))
 
 		b.renderValidatorObjectMethod(message, g)
-		// b.generateValidateRequired(o, otype)
+		b.generateValidateRequired(message, g)
 
 		for _, innerMessage := range message.Messages {
 			if innerMessage.Desc.IsMapEntry() {
 				continue
 			}
 
-			// notype := p.TypeName(p.objectNamed(ptype + "." + no.GetName()))
-
 			b.renderValidatorObjectMethod(innerMessage, g)
-			// b.generateValidateRequired(no, notype)
+			b.generateValidateRequired(message, g)
 		}
 	}
 }
@@ -503,4 +501,74 @@ func (b *validateBuilder) GetDeniedMethods(options []av_opts.AtlasValidateFieldO
 
 	sort.StringSlice(uniqueMethods).Sort()
 	return uniqueMethods
+}
+
+//Return methods to which field marked as required
+func (b *validateBuilder) GetRequiredMethods(options []av_opts.AtlasValidateFieldOption_Operation) []string {
+	requiredMethods := make(map[string]struct{}, 0)
+	for _, op := range options {
+		switch op {
+		case av_opts.AtlasValidateFieldOption_create:
+			requiredMethods["POST"] = struct{}{}
+		case av_opts.AtlasValidateFieldOption_update:
+			requiredMethods["PATCH"] = struct{}{}
+		case av_opts.AtlasValidateFieldOption_replace:
+			requiredMethods["PUT"] = struct{}{}
+		}
+	}
+
+	uniqueMethods := make([]string, 0)
+	for m := range requiredMethods {
+		uniqueMethods = append(uniqueMethods, m)
+	}
+
+	sort.StringSlice(uniqueMethods).Sort()
+	return uniqueMethods
+}
+
+func (b *validateBuilder) generateValidateRequired(message *protogen.Message, g *protogen.GeneratedFile) {
+	requiredFields := make(map[string][]string)
+	t := objectName(string(message.Desc.FullName()))
+
+	for _, f := range message.Fields {
+		fExt := proto.GetExtension(f.Desc.Options(), av_opts.E_Field)
+		if fExt != nil {
+			favOpt := fExt.(*av_opts.AtlasValidateFieldOption)
+			methods := b.GetRequiredMethods(favOpt.GetRequired())
+			if len(methods) == 0 {
+				continue
+			}
+
+			requiredFields[string(f.Desc.Name())] = methods
+		}
+	}
+
+	g.P(`func validate_required_Object_`, t, `(ctx `, generateImport("Context", "context", g), `, v map[string]`, generateImport("RawMessage", "encoding/json", g), `, path string) error {`)
+	g.P(`method := `, generateImport("HTTPMethodFromContext", runtimePkgPath, g), `(ctx)`)
+	g.P(`_ = method`)
+
+	var fields []string
+	for v := range requiredFields {
+		fields = append(fields, v)
+	}
+
+	sort.StringSlice(fields).Sort()
+
+	for _, field := range fields {
+		methods := requiredFields[field]
+		if len(methods) == 3 {
+			g.P(`if _, ok := v["`, field, `"]; !ok {`)
+			g.P(`path = `, generateImport("JoinPath", runtimePkgPath, g), `(path, "`, field, `")`)
+			g.P(`return `, generateImport("Errorf", "fmt", g), `("field %q is required for %q operation.", path, method)`)
+			g.P(`}`)
+		} else {
+			cond := strings.Join(methods, `" || method == "`)
+			g.P(`if _, ok := v["`, field, `"]; !ok && (method == "`, cond, `") {`)
+			g.P(`path = `, generateImport("JoinPath", runtimePkgPath, g), `(path, "`, field, `")`)
+			g.P(`return `, generateImport("Errorf", "fmt", g), `("field %q is required for %q operation.", path, method)`)
+			g.P(`}`)
+		}
+	}
+	g.P(`return nil`)
+	g.P(`}`)
 }
