@@ -330,7 +330,7 @@ func (b *validateBuilder) renderValidatorObjectMethods(protoFile *protogen.File)
 
 			// notype := p.TypeName(p.objectNamed(ptype + "." + no.GetName()))
 
-			b.renderValidatorObjectMethod(message, g)
+			// b.renderValidatorObjectMethod(message, g)
 			// b.generateValidateRequired(no, notype)
 		}
 	}
@@ -408,7 +408,7 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			g.P(`for i, vv := range vArr {`)
 			g.P(`vvPath := `, generateImport("Sprintf", "fmt", g), `("%s.[%d]", vArrPath, i)`)
 			if b.isLocal(fft) {
-				g.P(`if err = validate_Object_`, ft, `(ctx, vv, vvPath); err != nil {`)
+				g.P(`if err = validate_Object_`, objectName(fft), `(ctx, vv, vvPath); err != nil {`)
 				g.P(`return err`)
 				g.P(`}`)
 			} else {
@@ -419,7 +419,7 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			g.P(`}`)
 
 		} else if f.Message != nil {
-			ft := strings.Title(string(f.Desc.Message().Name()))
+			// ft := strings.Title(string(f.Desc.Message().Name()))
 			fft := string(f.Desc.Message().FullName())
 
 			if b.isWKT(fft) {
@@ -432,7 +432,7 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			g.P(`vv := v[k]`)
 			g.P(`vvPath := `, generateImport("JoinPath", runtimePkgPath, g), `(path, k)`)
 			if b.isLocal(fft) {
-				g.P(`if err = validate_Object_`, ft, `(ctx, vv, vvPath); err != nil {`)
+				g.P(`if err = validate_Object_`, objectName(fft), `(ctx, vv, vvPath); err != nil {`)
 				g.P(`return err`)
 				g.P(`}`)
 			} else {
@@ -467,6 +467,15 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 	g.P(`return validate_Object_`, t, `(ctx, r, path)`)
 	g.P(`}`)
 	g.P()
+}
+
+func objectName(fullName string) string {
+	sp := strings.Split(fullName, ".")
+	if len(sp) == 1 {
+		return fullName
+	}
+
+	return strings.Join(sp[1:], "_")
 }
 
 //Return methods to which field marked as denied
