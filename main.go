@@ -240,12 +240,14 @@ func (b *validateBuilder) renderValidatorMethods(protoFile *protogen.File) {
 		} else {
 			typeName := string(m.inputTypeMessage.Desc.Name())
 			fullTypeName := string(m.inputTypeMessage.Desc.FullName())
+			goImportPath := string(m.inputTypeMessage.GoIdent.GoImportPath)
 
 			if m.httpBody != "*" {
 				for _, field := range m.inputTypeMessage.Fields {
 					if string(field.Desc.Name()) == m.httpBody {
 						typeName = string(field.Message.Desc.Name())
 						fullTypeName = string(field.Message.Desc.FullName())
+						goImportPath = string(field.Message.GoIdent.GoImportPath)
 						break
 					}
 				}
@@ -256,7 +258,9 @@ func (b *validateBuilder) renderValidatorMethods(protoFile *protogen.File) {
 			if b.isLocal(fullTypeName) {
 				g.P(`return validate_Object_`, typeName, `(ctx, r, "")`)
 			} else {
-				g.P(`if validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(fullTypeName, g), `; ok {`)
+				// TODO: this should be done for all nonsense of such type
+				nonLocalName := generateImport(typeName, goImportPath, g)
+				g.P(`if validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(nonLocalName, g), `; ok {`)
 				g.P(`return validator.AtlasValidateJSON(ctx, r, "")`)
 				g.P(`}`)
 				g.P(`return nil`)
