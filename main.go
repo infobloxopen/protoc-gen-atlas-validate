@@ -334,7 +334,7 @@ func (b *validateBuilder) renderValidatorObjectMethods(protoFile *protogen.File)
 
 			// notype := p.TypeName(p.objectNamed(ptype + "." + no.GetName()))
 
-			// b.renderValidatorObjectMethod(message, g)
+			b.renderValidatorObjectMethod(innerMessage, g)
 			// b.generateValidateRequired(no, notype)
 		}
 	}
@@ -343,10 +343,11 @@ func (b *validateBuilder) renderValidatorObjectMethods(protoFile *protogen.File)
 func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message, g *protogen.GeneratedFile) {
 	// t should be type
 	t := string(message.Desc.Name())
+	fft := string(message.Desc.FullName())
 
-	g.P(`// validate_Object_`, t, ` function validates a JSON for a given object.`)
-	g.P(`func validate_Object_`, t, `(ctx `, generateImport("Context", "context", g), `, r `, generateImport("RawMessage", "encoding/json", g), `, path string) (err error) {`)
-	g.P(`if hook, ok := `, b.generateAtlasJSONValidateInterfaceSignature(t, g), `; ok {`)
+	g.P(`// validate_Object_`, objectName(fft), ` function validates a JSON for a given object.`)
+	g.P(`func validate_Object_`, objectName(fft), `(ctx `, generateImport("Context", "context", g), `, r `, generateImport("RawMessage", "encoding/json", g), `, path string) (err error) {`)
+	g.P(`if hook, ok := `, b.generateAtlasJSONValidateInterfaceSignature(objectName(fft), g), `; ok {`)
 	g.P(`if r, err = hook.AtlasJSONValidate(ctx, r, path); err != nil {`)
 	g.P(`return err`)
 	g.P(`}`)
@@ -357,7 +358,7 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 	g.P(`return `, generateImport("Errorf", "fmt", g), `("invalid value for %q: expected object.", path)`)
 	g.P(`}`)
 	g.P()
-	g.P(`if err = validate_required_Object_`, t, `(ctx, v, path); err != nil {`)
+	g.P(`if err = validate_required_Object_`, objectName(fft), `(ctx, v, path); err != nil {`)
 	g.P(`return err`)
 	g.P(`}`)
 	g.P()
@@ -396,15 +397,14 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			g.P(`return `, generateImport("Errorf", "fmt", g), `("invalid value for %q: expected array.", vArrPath)`)
 			g.P(`}`)
 
-			ft := strings.Title(string(f.Desc.Message().Name()))
-			fft := string(f.Desc.Message().FullName())
+			fft = string(f.Desc.Message().FullName())
 
 			if b.isWKT(fft) {
 				continue
 			}
 
 			if !b.isLocal(fft) {
-				g.P(`validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(ft, g))
+				g.P(`validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(objectName(fft), g))
 				g.P(`if !ok {`)
 				g.P(`continue`)
 				g.P(`}`)
@@ -423,8 +423,7 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			g.P(`}`)
 
 		} else if f.Message != nil {
-			// ft := strings.Title(string(f.Desc.Message().Name()))
-			fft := string(f.Desc.Message().FullName())
+			fft = string(f.Desc.Message().FullName())
 
 			if b.isWKT(fft) {
 				continue
@@ -440,7 +439,8 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 				g.P(`return err`)
 				g.P(`}`)
 			} else {
-				g.P(`validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(fft, g))
+				nonLocalName := generateImport(objectName(fft), string(f.Message.GoIdent.GoImportPath), g)
+				g.P(`validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(nonLocalName, g))
 				g.P(`if !ok {`)
 				g.P(`continue`)
 				g.P(`}`)
