@@ -16,7 +16,7 @@ import (
 
 const (
 	metadataPkgPath  = "google.golang.org/grpc/metadata"
-	gwruntimePkgPath = "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	gwruntimePkgPath = "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	runtimePkgPath   = "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
 )
 
@@ -506,7 +506,7 @@ func objectName(fullName string) string {
 
 //Return methods to which field marked as denied
 func (b *validateBuilder) GetDeniedMethods(options []av_opts.AtlasValidateFieldOption_Operation) []string {
-	httpMethods := make(map[string]struct{}, 0)
+	httpMethods := make(map[string]struct{})
 	for _, op := range options {
 		switch op {
 		case av_opts.AtlasValidateFieldOption_create:
@@ -529,7 +529,7 @@ func (b *validateBuilder) GetDeniedMethods(options []av_opts.AtlasValidateFieldO
 
 //Return methods to which field marked as required
 func (b *validateBuilder) GetRequiredMethods(options []av_opts.AtlasValidateFieldOption_Operation) []string {
-	requiredMethods := make(map[string]struct{}, 0)
+	requiredMethods := make(map[string]struct{})
 	for _, op := range options {
 		switch op {
 		case av_opts.AtlasValidateFieldOption_create:
@@ -649,7 +649,7 @@ func (b *validateBuilder) renderAnnotator(g *protogen.GeneratedFile) {
 	g.P(`return md`)
 	g.P(`}`)
 	g.P(`r.Body = `, generateImport("NopCloser", "io/ioutil", g), `(`, generateImport("NewReader", "bytes", g), `(b))`)
-	g.P(`ctx := `, generateImport("WithValue", "conext", g), `(`, generateImport("WithValue", "context", g), `(`, generateImport("Background", "context", g), `(), `,
+	g.P(`ctx := `, generateImport("WithValue", "context", g), `(`, generateImport("WithValue", "context", g), `(`, generateImport("Background", "context", g), `(), `,
 		generateImport("HTTPMethodContextKey", runtimePkgPath, g), `, r.Method), `, generateImport("AllowUnknownContextKey", runtimePkgPath, g), `, v.allowUnknown)`)
 	g.P(`if err = v.validator(ctx, b); err != nil {`)
 	g.P(`md.Set("Atlas-Validation-Error", err.Error())`)
