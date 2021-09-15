@@ -26,6 +26,7 @@ type validateBuilder struct {
 	genFiles        map[string]*protogen.GeneratedFile
 	filesToGenerate map[string]bool
 	packageName     string
+	renderOnce      bool
 }
 
 func main() {
@@ -76,18 +77,39 @@ func main() {
 }
 
 func (b *validateBuilder) generate(plugin *protogen.Plugin) *pluginpb.CodeGeneratorResponse {
+	var lastFile *protogen.File
+
 	for _, protoFile := range plugin.Files {
 		_, ok := b.filesToGenerate[*protoFile.Proto.Name]
 		if !ok {
 			continue
 		}
+		lastFile = protoFile
 
 		b.packageName = string(protoFile.GoPackageName)
 		b.renderValidatorMethods(protoFile)
 		b.renderValidatorObjectMethods(protoFile)
+
+		if !b.renderOnce && sameName(b.packageName, *protoFile.Proto.Name) {
+			b.renderOnce = true
+			g := b.generateFile(protoFile)
+			b.renderMethodDescriptors(g)
+			b.renderAnnotator(g)
+		}
+	}
+
+	if !b.renderOnce {
+		g := b.generateFile(lastFile)
+		b.renderMethodDescriptors(g)
+		b.renderAnnotator(g)
 	}
 
 	return plugin.Response()
+}
+
+func sameName(packageName string, fileName string) bool {
+	fs := strings.Split(fileName, "/")
+	return strings.HasPrefix(fs[len(fs)-1], packageName+".")
 }
 
 func (b *validateBuilder) generateFile(protoFile *protogen.File) *protogen.GeneratedFile {
