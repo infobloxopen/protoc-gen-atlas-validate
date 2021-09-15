@@ -333,7 +333,7 @@ func (b *validateBuilder) renderValidatorObjectMethods(protoFile *protogen.File)
 			}
 
 			b.renderValidatorObjectMethod(innerMessage, g)
-			b.generateValidateRequired(message, g)
+			b.generateValidateRequired(innerMessage, g)
 		}
 	}
 }
