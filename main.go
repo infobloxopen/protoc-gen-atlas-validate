@@ -23,7 +23,6 @@ const (
 type validateBuilder struct {
 	plugin          *protogen.Plugin
 	methods         map[string][]*methodDescriptor
-	genFiles        map[string]*protogen.GeneratedFile
 	filesToGenerate map[string]bool
 	packageName     string
 	renderOnce      bool
@@ -49,9 +48,8 @@ func main() {
 	}
 
 	builder := &validateBuilder{
-		methods:  make(map[string][]*methodDescriptor),
-		genFiles: make(map[string]*protogen.GeneratedFile),
-		plugin:   plugin,
+		methods: make(map[string][]*methodDescriptor),
+		plugin:  plugin,
 	}
 
 	m := make(map[string]bool)
@@ -77,31 +75,33 @@ func main() {
 }
 
 func (b *validateBuilder) generate(plugin *protogen.Plugin) *pluginpb.CodeGeneratorResponse {
-	var lastFile *protogen.File
+	var lastG *protogen.GeneratedFile
 
 	for _, protoFile := range plugin.Files {
 		_, ok := b.filesToGenerate[*protoFile.Proto.Name]
 		if !ok {
 			continue
 		}
-		lastFile = protoFile
+
+		fileName := protoFile.GeneratedFilenamePrefix + ".pb.atlas.validate.go"
+		g := b.plugin.NewGeneratedFile(fileName, ".")
+		lastG = g
+		g.P("package ", protoFile.GoPackageName)
 
 		b.packageName = string(protoFile.GoPackageName)
-		b.renderValidatorMethods(protoFile)
-		b.renderValidatorObjectMethods(protoFile)
+		b.renderValidatorMethods(protoFile, g)
+		b.renderValidatorObjectMethods(protoFile, g)
 
 		if !b.renderOnce && sameName(b.packageName, *protoFile.Proto.Name) {
 			b.renderOnce = true
-			g := b.generateFile(protoFile)
 			b.renderMethodDescriptors(g)
 			b.renderAnnotator(g)
 		}
 	}
 
 	if !b.renderOnce {
-		g := b.generateFile(lastFile)
-		b.renderMethodDescriptors(g)
-		b.renderAnnotator(g)
+		b.renderMethodDescriptors(lastG)
+		b.renderAnnotator(lastG)
 	}
 
 	return plugin.Response()
@@ -110,21 +110,6 @@ func (b *validateBuilder) generate(plugin *protogen.Plugin) *pluginpb.CodeGenera
 func sameName(packageName string, fileName string) bool {
 	fs := strings.Split(fileName, "/")
 	return strings.HasPrefix(fs[len(fs)-1], packageName+".")
-}
-
-func (b *validateBuilder) generateFile(protoFile *protogen.File) *protogen.GeneratedFile {
-	g := b.genFiles[*protoFile.Proto.Name]
-	if g != nil {
-		return g
-	}
-
-	// create package first and return generatedFile
-	fileName := protoFile.GeneratedFilenamePrefix + ".pb.atlas.validate.go"
-	g = b.plugin.NewGeneratedFile(fileName, ".")
-	g.P("package ", protoFile.GoPackageName)
-	b.genFiles[*protoFile.Proto.Name] = g
-
-	return g
 }
 
 func (b *validateBuilder) gatherMethods(file *protogen.File) []*methodDescriptor {
@@ -252,12 +237,8 @@ func (b *validateBuilder) getAllowUnknown(file proto.Message, svc proto.Message,
 
 // renderValidatorMethods function generates entrypoints for validator one per each
 // HTTP request (and HTTP request additional_bindings).
-func (b *validateBuilder) renderValidatorMethods(protoFile *protogen.File) {
-	var g *protogen.GeneratedFile
+func (b *validateBuilder) renderValidatorMethods(protoFile *protogen.File, g *protogen.GeneratedFile) {
 	for _, m := range b.methods[*protoFile.Proto.Name] {
-		// create protoFile iff we need to generate something
-		g = b.generateFile(protoFile)
-
 		g.P(`// validate_`, m.gwPattern, ` is an entrypoint for validating "`, m.httpMethod, `" HTTP request `)
 		g.P(`// that match *.pb.gw.go/pattern_`, m.gwPattern, `.`)
 		g.P(`func validate_`, m.gwPattern, `(ctx `, generateImport("Context", "context", g), `, r `, generateImport("RawMessage", "encoding/json", g), `) (err error) {`)
@@ -347,8 +328,7 @@ func (b *validateBuilder) generateAtlasJSONValidateInterfaceSignature(t string, 
 		t, generateImport("Context", "context", g), rawMessage, rawMessage)
 }
 
-func (b *validateBuilder) renderValidatorObjectMethods(protoFile *protogen.File) {
-	g := b.generateFile(protoFile)
+func (b *validateBuilder) renderValidatorObjectMethods(protoFile *protogen.File, g *protogen.GeneratedFile) {
 	for _, message := range protoFile.Messages {
 		b.renderValidatorObjectMethod(message, g)
 		b.generateValidateRequired(message, g)
