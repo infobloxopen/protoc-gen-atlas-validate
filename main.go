@@ -21,11 +21,10 @@ const (
 )
 
 type validateBuilder struct {
-	plugin          *protogen.Plugin
-	methods         map[string][]*methodDescriptor
-	filesToGenerate map[string]bool
-	packageName     string
-	renderOnce      bool
+	plugin      *protogen.Plugin
+	methods     map[string][]*methodDescriptor
+	packageName string
+	renderOnce  bool
 }
 
 func main() {
@@ -52,13 +51,6 @@ func main() {
 		plugin:  plugin,
 	}
 
-	m := make(map[string]bool)
-	for _, f := range request.FileToGenerate {
-		m[f] = true
-	}
-
-	builder.filesToGenerate = m
-
 	for _, protoFile := range plugin.Files {
 		methods := builder.gatherMethods(protoFile)
 		protoName := *protoFile.Proto.Name
@@ -78,8 +70,7 @@ func (b *validateBuilder) generate(plugin *protogen.Plugin) *pluginpb.CodeGenera
 	var lastG *protogen.GeneratedFile
 
 	for _, protoFile := range plugin.Files {
-		_, ok := b.filesToGenerate[*protoFile.Proto.Name]
-		if !ok {
+		if !protoFile.Generate {
 			continue
 		}
 
