@@ -23,11 +23,7 @@ default: vendor options install
 
 .PHONY: vendor
 vendor:
-	dep ensure -vendor-only
-
-.PHONY: vendor-update
-vendor-update:
-	dep ensure
+	go mod vendor
 
 install:
 	go install
@@ -56,7 +52,7 @@ gentool-examples: gentool
 
 gentool-options:
 	$(GENERATOR) \
-		--gogo_out="Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:$(DOCKERPATH)" \
+		--go_out="Mgoogle/protobuf/descriptor.proto:$(DOCKERPATH)" \
 		$(PROJECT_ROOT)/options/atlas_validate.proto
 
 test: gentool-examples
