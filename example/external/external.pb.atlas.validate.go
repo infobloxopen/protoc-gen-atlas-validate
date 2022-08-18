@@ -185,9 +185,9 @@ var validate_Patterns = []struct {
 	// Included for introspection purpose.
 	allowUnknown bool
 }{
-	// patterns for file example/external/external.proto
+	// patterns for file atlas_validate.proto
 
-	// patterns for file github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto
+	// patterns for file external/external.proto
 
 	// patterns for file google/api/annotations.proto
 

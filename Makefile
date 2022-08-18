@@ -1,3 +1,5 @@
+include Makefile.buf
+
 GOPATH ?= $(HOME)/go
 SRCPATH := $(patsubst %/,%,$(GOPATH))/src
 
@@ -28,6 +30,27 @@ vendor:
 install:
 	go install
 
+regenerate: clean-gen generate
+
+clean-gen:
+	cd example/examplepb && rm -f *.pb.atlas.validate.go && rm -f *.pb.gw.go && rm -f *.pb.go
+	cd example/external && rm -f *.pb.atlas.validate.go && rm -f *.pb.gw.go && rm -f *.pb.go
+	cd options && rm -f *.pb.go
+
+generate: gen-gateway $(BUF) example options
+
+gen-gateway:
+	go generate tools/tools.go
+
+.PHONY: example
+example:
+	buf generate --template example/external/buf.gen.yaml --path example/external
+	buf generate --template example/examplepb/buf.gen.yaml --path example/examplepb
+
+.PHONY: options
+options:
+	buf generate --template options/buf.gen.yaml --path options/atlas_validate.proto
+
 .PHONY: gentool
 gentool:
 	docker build -f $(GENVALIDATE_DOCKERFILE) -t $(GENVALIDATE_IMAGE):$(IMAGE_VERSION) .
@@ -36,7 +59,7 @@ gentool:
 gentool-examples: gentool
 	$(GENERATOR) \
 		-I/go/src/github.com/infobloxopen/protoc-gen-atlas-validate \
-		--go_out="plugins=grpc:$(DOCKERPATH)" \
+		--go_out="$(DOCKERPATH)" --go-grpc_out="$(DOCKERPATH)"\
 		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
 		--atlas-validate_out="$(DOCKERPATH)" \
 		example/examplepb/example.proto \
@@ -45,7 +68,7 @@ gentool-examples: gentool
 
 	$(GENERATOR) \
 		-I/go/src/github.com/infobloxopen/protoc-gen-atlas-validate \
-		--go_out="plugins=grpc:$(DOCKERPATH)" \
+		--go_out="$(DOCKERPATH)" --go-grpc_out="$(DOCKERPATH)"\
 		--grpc-gateway_out="logtostderr=true:$(DOCKERPATH)" \
 		--atlas-validate_out="$(DOCKERPATH)" \
 			example/external/external.proto
@@ -55,5 +78,5 @@ gentool-options:
 		--go_out="Mgoogle/protobuf/descriptor.proto:$(DOCKERPATH)" \
 		$(PROJECT_ROOT)/options/atlas_validate.proto
 
-test: gentool-examples
+test: generate
 	go test -v -cover ./example/examplepb
