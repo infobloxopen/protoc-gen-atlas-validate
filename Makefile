@@ -37,7 +37,7 @@ clean-gen:
 	cd example/external && rm -f *.pb.atlas.validate.go && rm -f *.pb.gw.go && rm -f *.pb.go
 	cd options && rm -f *.pb.go
 
-generate: install-gen-gateway $(BUF) example options
+generate: install-gen-gateway $(BUF) options install example
 
 install-gen-gateway:
 	go generate tools/tools.go
@@ -78,5 +78,5 @@ gentool-options:
 		--go_out="Mgoogle/protobuf/descriptor.proto:$(DOCKERPATH)" \
 		$(PROJECT_ROOT)/options/atlas_validate.proto
 
-test: generate
+test: regenerate
 	go test -v -cover ./example/examplepb
