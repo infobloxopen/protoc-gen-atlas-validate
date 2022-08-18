@@ -37,7 +37,7 @@ clean-gen:
 	cd example/external && rm -f *.pb.atlas.validate.go && rm -f *.pb.gw.go && rm -f *.pb.go
 	cd options && rm -f *.pb.go
 
-generate: install-gen-gateway $(BUF) example options
+generate: install install-gen-gateway $(BUF) example options
 
 install-gen-gateway:
 	go generate tools/tools.go
