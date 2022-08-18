@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package examplepb;
+package examples.foo;
 
 import "google/api/annotations.proto";
 
-import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
+import "atlas_validate.proto";
 
 option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/examplepb;examplepb";
 

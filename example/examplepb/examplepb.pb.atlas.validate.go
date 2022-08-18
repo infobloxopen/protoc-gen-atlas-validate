@@ -18,7 +18,9 @@ var validate_Patterns = []struct {
 	// Included for introspection purpose.
 	allowUnknown bool
 }{
-	// patterns for file example/examplepb/example.proto
+	// patterns for file atlas_validate.proto
+
+	// patterns for file examplepb/example.proto
 	{
 		pattern:      pattern_Users_Create_0,
 		httpMethod:   "POST",
@@ -110,7 +112,7 @@ var validate_Patterns = []struct {
 		allowUnknown: false,
 	},
 
-	// patterns for file example/examplepb/example_multi.proto
+	// patterns for file examplepb/example_multi.proto
 	{
 		pattern:      pattern_Users2_Create2_0,
 		httpMethod:   "POST",
@@ -118,11 +120,9 @@ var validate_Patterns = []struct {
 		allowUnknown: false,
 	},
 
-	// patterns for file example/examplepb/examplepb.proto
+	// patterns for file examplepb/examplepb.proto
 
-	// patterns for file github.com/infobloxopen/protoc-gen-atlas-validate/example/external/external.proto
-
-	// patterns for file github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto
+	// patterns for file external/external.proto
 
 	// patterns for file google/api/annotations.proto
 

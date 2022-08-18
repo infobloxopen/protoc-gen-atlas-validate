@@ -1,0 +1,10 @@
+version: v1
+plugins:
+  - remote: buf.build/library/plugins/go:v1.27.1-1
+    out: example
+    opt:
+      - paths=source_relative
+  - name: atlas-validate
+    out: example
+    opt:
+      - paths=source_relative

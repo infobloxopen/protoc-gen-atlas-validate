@@ -1,0 +1,17 @@
+version: v1
+plugins:
+  - remote: buf.build/library/plugins/go:v1.27.1-1
+    out: example
+    opt:
+      - paths=source_relative
+  - remote: buf.build/library/plugins/go-grpc:v1.1.0-2
+    out: example
+    opt: paths=source_relative
+  - name: atlas-validate
+    out: example
+    opt:
+      - paths=source_relative
+  - name: grpc-gateway
+    out: example
+    opt:
+      - paths=source_relative

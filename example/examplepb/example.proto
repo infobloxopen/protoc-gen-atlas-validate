@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package examplepb;
+package examples.foo;
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
@@ -8,8 +8,8 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/wrappers.proto";
 
-import "github.com/infobloxopen/protoc-gen-atlas-validate/options/atlas_validate.proto";
-import "github.com/infobloxopen/protoc-gen-atlas-validate/example/external/external.proto";
+import "atlas_validate.proto";
+import "external/external.proto";
 
 option go_package = "github.com/infobloxopen/protoc-gen-atlas-validate/example/examplepb;examplepb";
 
@@ -29,10 +29,9 @@ message User {
 
 	external.ExternalUser external_user = 7;
 
-    repeated google.protobuf.Empty empty_list = 8;
+	repeated google.protobuf.Empty empty_list = 8;
 
-    google.protobuf.Timestamp timestamp = 9;
-
+	google.protobuf.Timestamp timestamp = 9;
 }
 
 message Address {
