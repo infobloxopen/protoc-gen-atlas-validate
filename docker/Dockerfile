@@ -6,7 +6,7 @@ WORKDIR /go/src/github.com/infobloxopen/protoc-gen-atlas-validate
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/usr/bin/protoc-gen-atlas-validate main.go
 
-FROM infoblox/atlas-gentool:v25.1 AS runner
+FROM infoblox/atlas-gentool:v24.0 AS runner
 
 COPY --from=builder /out/usr/bin/protoc-gen-atlas-validate /usr/bin/protoc-gen-atlas-validate
 COPY --from=builder /go/src/github.com/infobloxopen/protoc-gen-atlas-validate/options/*.proto /go/src/github.com/infobloxopen/protoc-gen-atlas-validate/options/

@@ -427,7 +427,7 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			g.P(`}`)
 			g.P(`vv := v[k]`)
 			g.P(`vvPath := `, generateImport("JoinPath", runtimePkgPath, g), `(path, k)`)
-			if b.isLocal(f.Desc.Message()) {
+			if b.isLocal(msg) {
 				g.P(`if err = validate_Object_`, msgName, `(ctx, vv, vvPath); err != nil {`)
 				g.P(`return err`)
 				g.P(`}`)
