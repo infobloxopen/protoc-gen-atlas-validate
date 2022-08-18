@@ -4,11 +4,8 @@ import (
 	context "context"
 	json "encoding/json"
 	fmt "fmt"
-
 	runtime "github.com/infobloxopen/protoc-gen-atlas-validate/runtime"
 )
-
-// Test the PR actions
 
 // validate_Users2_Create2_0 is an entrypoint for validating "POST" HTTP request
 // that match *.pb.gw.go/pattern_Users2_Create2_0.
