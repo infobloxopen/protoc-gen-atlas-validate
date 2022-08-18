@@ -29,10 +29,9 @@ message User {
 
 	external.ExternalUser external_user = 7;
 
-  repeated google.protobuf.Empty empty_list = 8;
+	repeated google.protobuf.Empty empty_list = 8;
 
-  google.protobuf.Timestamp timestamp = 9;
-
+	google.protobuf.Timestamp timestamp = 9;
 }
 
 message Address {
