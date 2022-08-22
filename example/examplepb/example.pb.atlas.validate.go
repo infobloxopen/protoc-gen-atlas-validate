@@ -222,6 +222,27 @@ func validate_Object_User(ctx context.Context, r json.RawMessage, path string) (
 				return fmt.Errorf("invalid value for %q: expected array.", vArrPath)
 			}
 		case "timestamp":
+		case "some_friends":
+			if v[k] == nil {
+				continue
+			}
+			var vArr []json.RawMessage
+			vArrPath := runtime.JoinPath(path, k)
+			if err = json.Unmarshal(v[k], &vArr); err != nil {
+				return fmt.Errorf("invalid value for %q: expected array.", vArrPath)
+			}
+			validator, ok := interface{}(&external.ExternalUser{}).(interface {
+				AtlasValidateJSON(context.Context, json.RawMessage, string) error
+			})
+			if !ok {
+				continue
+			}
+			for i, vv := range vArr {
+				vvPath := fmt.Sprintf("%s.[%d]", vArrPath, i)
+				if err = validator.AtlasValidateJSON(ctx, vv, vvPath); err != nil {
+					return err
+				}
+			}
 		default:
 			if !allowUnknown {
 				return fmt.Errorf("unknown field %q.", runtime.JoinPath(path, k))

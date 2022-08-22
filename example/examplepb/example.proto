@@ -32,6 +32,8 @@ message User {
 	repeated google.protobuf.Empty empty_list = 8;
 
 	google.protobuf.Timestamp timestamp = 9;
+
+	repeated external.ExternalUser some_friends = 10;
 }
 
 message Address {
