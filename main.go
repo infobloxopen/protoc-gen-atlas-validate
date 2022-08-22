@@ -396,7 +396,8 @@ func (b *validateBuilder) renderValidatorObjectMethod(message *protogen.Message,
 			}
 
 			if !b.isLocal(msg) {
-				g.P(`validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(msgName, g))
+				nonLocalName := generateImport(msgName, string(f.Message.GoIdent.GoImportPath), g)
+				g.P(`validator, ok := `, b.generateAtlasValidateJSONInterfaceSignature(nonLocalName, g))
 				g.P(`if !ok {`)
 				g.P(`continue`)
 				g.P(`}`)
